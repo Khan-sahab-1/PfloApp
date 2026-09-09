@@ -1,0 +1,36 @@
+// navigationString.jsx
+// jamshed start bug id 2555
+// Description: This file defines a set of constants representing navigation route names used throughout the application. By centralizing these route names in a single file, it promotes consistency and maintainability across the codebase. Each constant corresponds to a specific screen or route in the app, making it easier for developers to reference and manage navigation paths without hardcoding strings throughout the components.
+export default {
+  INITIALSCREEN: 'initialScreen',
+  LOGIN: 'login',
+  SIGNUP: 'signup',
+  HOMESCREEN: 'homescreen',
+  BOOKING: 'booking',
+  PROFILE: 'Profile',
+  MYRECURRING: 'Myrecurring',
+  TABROUTE: 'Tabroutes',
+  TODO: 'Todo',
+  SIGNUPFORM: 'SignUpForm',
+  LEADES: 'Leades',
+  LEADESFORM: 'LeadesForm',
+  OPPOURTUNITY: 'Opportunity',
+  ENQUERY: 'Enquery',
+  LEAVEREQUEST: 'LeaveRequest',
+  ADDENQUERY: 'AddEnquery',
+  EDITENQUERYLILE: 'UpdateEnquiryLine',
+  PREVIEWLEADS: 'PreviewLeads',
+  CONTACTINFORMATION: 'ContactInformation',
+  QUERY: 'Query',
+  TERMANDCONDITION: 'Termandcondition',
+  EXTRAINFO: 'Extrainfo',
+  REMARKSCREENS: 'remarksscreen',
+  QUTATION: 'Qutation',
+  EDITLEADREMARK: 'EditLeadremark',
+  PREVIEWENQUERYQUTAIONMEET: 'PreviewEnqueryQutaionmeet',
+  PREVIEWEDITREMARK: 'PreviewEditRemark',
+  ATTACHMENTSCREEN: 'Attachmentscreen',
+  PLANEOFACTION: 'PlanOfAction',
+  MAPSPREVIEW: 'MapsPreview',
+};
+//bug id 2555 Jamshed end

@@ -1,0 +1,916 @@
+// Jamshed start bug id   2555
+// Description: This file defines the Home component, which serves as the main dashboard for the application. It displays user information, attendance status, and provides navigation to various features such as leave requests, notifications, and sign-out. The component fetches user data from the server, manages check-in/check-out functionality with time tracking, and integrates with the device's calendar to manage meetings. The design is responsive to light and dark themes, and it includes error handling for API calls and user interactions to ensure a smooth user experience.
+
+import React, {useCallback, useContext, useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  ScrollView,
+  Alert,
+  AppState,
+  PermissionsAndroid,
+  useColorScheme,
+  Platform
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {COLORS} from '../../styles/Colors';
+import ButtonCompo from '../../components/ButtonCompo';
+import {AuthContext} from '../../Screens/Context';
+import urls from '../../../url';
+import SelfieModal from '../../components/SelfieModal';
+import {useDispatch, useSelector} from 'react-redux';
+import {fetchUserData} from '../../redux/reducers/Userinforeducers';
+import requestCalendarPermission from '../../utils/CalenderPermission';
+import RNCalendarEvents from 'react-native-calendar-events';
+import {requestLocationPermission} from '../../utils/permissionUtils';
+import Geolocation from 'react-native-geolocation-service';
+import makeApiCall from '../../utils/apiHelper';
+import {getGreeting} from '../../utils/greeting';
+import {launchImageLibrary} from 'react-native-image-picker';
+import navigationString from '../../route/navigationString';
+import moment from 'moment';
+import {useFocusEffect} from '@react-navigation/native';
+import Loader from '../../components/Loader';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import BackgroundService from 'react-native-background-actions';
+import { startTracking, stopTracking } from '../../components/BackgroundLocationService';
+const DashboardScreen = ({navigation, route}) => {
+  // console.log(route?.,'Route Params in Home Screen')
+  const [userData, setUserData] = useState(null);
+  const [checkInTime, setCheckInTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [meetings, setMeetings] = useState([]);
+  const contextType = useContext(AuthContext);
+  const [imageUri, setImageUri] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  // console.log(checkInTime, 'TimePunhsfshgshs');
+  const [isPressed, setIsPressed] = useState(false);
+
+  const server_origin = contextType.currentUrl;
+  const getHomePageData = server_origin + urls.getHomepageData;
+  const getMeetingData = server_origin + urls.getCalendarData;
+  const isLeaveManager = userData?.result?.leave_manager;
+  const getNotification = server_origin + urls.getNotificationData;
+  const isParent =
+    userData?.result?.parent && userData.result.parent !== 'hr.employee()';
+  const natificationCount = notificationCount || 0;
+  const employeeLeaveCode = userData?.result?.emp_code;
+  // console.log(employeeLeaveCode, 'Employee Code');
+  // console.log(meetings, 'server Mil raha h');
+  console.log(userData, 'User data');
+  const colorschema = useColorScheme();
+  const isDark = colorschema === 'dark';
+  const [isTodayPunched, setIsTodayPunched] = useState(false);
+  const [buttonLabel, setButtonLabel] = useState('Check In');
+  const [punchType, setPunchType] = useState(null);
+  const [isLoding, setisLoding] = useState(false);
+
+  const openImagePicker = () => {
+    const options = {
+      mediaType: 'photo',
+      quality: 0.8,
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        const uri = response.assets?.[0]?.uri;
+        if (uri) {
+          setImageUri(uri);
+        }
+      }
+    });
+  };
+
+  useEffect(() => {
+    // getCurrentLocation()
+    // fetchlocationdata()
+  }, []);
+  const fetchUserDataApi = async () => {
+    try {
+      setisLoding(true);
+      const response = await fetch(getHomePageData, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {},
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const userData = await response.json();
+      // console.log('&&&&&&&&&&&&', userData)
+      setUserData(userData);
+      // fetchCalendarData(userData.result.emp_code);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setisLoding(false);
+    }
+  };
+
+  // jamshed ali start bug id 2810 notification count not updating in home screen after approval or reject leave request
+  const fetchNotificationData = async () => {
+    try {
+      const response = await fetch(getNotification, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {employeeLeaveCode},
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Notification data----', data);
+      // setNotificationData(data.result);
+      const draftRecords = data.result.filter(item => item.state === 'confirm');
+      setNotificationCount(draftRecords.length);
+      console.log(draftRecords.length, 'Notification count in home screen');
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotificationData();
+    }, [employeeLeaveCode]),
+  );
+
+  const fetchCalendarData = async () => {
+    if (!userData || !userData.result || !userData.result.emp_code) {
+      console.error('Employee code is missing or user data is not available');
+      return;
+    }
+    try {
+      const response = await fetch(getMeetingData, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {employeeCode: userData.result.emp_code},
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const meetData = await response.json();
+      console.log('======Meeting Data=======', meetData);
+      const validMeetings = meetData.result.filter(meeting => !meeting.archive);
+      setMeetings(validMeetings);
+      for (const meeting of validMeetings) {
+        if (!meeting.event_id && !meeting.auto_sync) {
+          const newEventId = await addMeetingToCalendar(meeting);
+          if (newEventId) {
+            await updateEventId(newEventId, meeting.activity_id);
+          }
+        }
+      }
+      const archivedMeetings = meetData.result.filter(
+        meeting => meeting.archive,
+      );
+      for (const meeting of archivedMeetings) {
+        await removeMeetingFromCalendar(meeting);
+      }
+    } catch (error) {
+      console.error('Error fetching calendar data:', error);
+    }
+  };
+
+  const removeMeetingFromCalendar = async meeting => {
+    if (meeting.event_id) {
+      try {
+        await RNCalendarEvents.removeEvent(meeting.event_id);
+        console.log(
+          `Meeting "${meeting.name}" removed from calendar with event ID: ${meeting.event_id}`,
+        );
+      } catch (error) {
+        console.error('Error removing event from calendar:', error);
+      }
+    } else {
+      console.log('No event ID found to remove from calendar.');
+    }
+  };
+
+  const updateEventId = async (newEventId, oldEventId) => {
+    const response = await fetch(`${server_origin}/calendar/update_event_id`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'call',
+        params: {
+          employeeCode: userData.result.emp_code,
+          oldEventId: oldEventId,
+          newEventId: newEventId,
+        },
+      }),
+    });
+    const result = await response.json();
+    console.log('Update Event ID Response:', result);
+  };
+
+  const addMeetingToCalendar = async meeting => {
+    const granted = await requestCalendarPermission();
+    if (!granted) {
+      Alert.alert(
+        'Permission Denied',
+        'Cannot access calendar without permission.',
+      );
+      return;
+    }
+    console.log('Attendee Emails:', meeting.attendee_name);
+    try {
+      const calendars = await RNCalendarEvents.findCalendars();
+      const primaryCalendar = calendars.find(
+        c => c.isPrimary && c.allowsModifications,
+      );
+      if (!primaryCalendar) {
+        // Alert.alert('No modifiable calendar found');
+        return;
+      }
+      if (meeting.event_id || meeting.auto_sync) {
+        console.log(
+          `Skipping creation for meeting "${meeting.name}" as auto_sync is true`,
+        );
+        return;
+      }
+      let reminderMinutes = 15;
+      if (typeof meeting.reminders === 'string') {
+        const reminderMatch = meeting.reminders.match(
+          /(\d+)\s*(Hour|Minute|Day)/,
+        );
+        if (reminderMatch) {
+          const reminderValue = parseInt(reminderMatch[1], 10);
+          if (reminderMatch[2] === 'Hour') {
+            reminderMinutes = reminderValue * 60;
+          } else if (reminderMatch[2] === 'Day') {
+            reminderMinutes = reminderValue * 24 * 60;
+          } else {
+            reminderMinutes = reminderValue;
+          }
+        }
+      }
+      const utcDate = new Date(meeting.date);
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const localDate = new Date(
+        utcDate.getTime() - timezoneOffset * 60 * 1000,
+      );
+      const localEndDate = new Date(
+        localDate.getTime() + meeting.duration * 60 * 60 * 1000,
+      );
+      const startDateISO = localDate.toISOString();
+      const endDateISO = localEndDate.toISOString();
+      const attendeesString = meeting.attendee_name.join(', ');
+      const newEventId = await RNCalendarEvents.saveEvent(meeting.name, {
+        calendarId: primaryCalendar.id,
+        startDate: startDateISO,
+        endDate: endDateISO,
+        location: meeting.location,
+        alarms: [{date: reminderMinutes}],
+      });
+      if (newEventId) {
+        console.log(
+          `Meeting "${meeting.name}" added to calendar with event ID: ${newEventId}`,
+        );
+        return newEventId;
+      }
+    } catch (error) {
+      console.error('Error adding event to calendar:', error);
+    }
+  };
+  const formatTime = seconds => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins
+      .toString()
+      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+  // useEffect(() => {
+  //   const loadCheckInTime = async () => {
+  //     const storedTime = await AsyncStorage.getItem('checkInTime');
+  //     if (storedTime) {
+  //       setCheckInTime(parseInt(storedTime, 10));
+  //     }
+  //   };
+  //   loadCheckInTime();
+  // }, []);
+
+  useEffect(() => {
+    fetchUserDataApi();
+    // getPunchTime();
+  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getPunchTime();
+    }, []),
+  );
+
+  const handleLeaveRequest = () => {
+    if (userData) {
+      navigation.navigate(navigationString.LEAVEREQUEST, {
+        userName: userData.result.name,
+        employeeCode: userData.result.emp_code,
+        userId: userData.result.emp_id,
+        isManager: userData.result.parent,
+        leaveManager: userData.result.leave_manager,
+      });
+    } else {
+      console.error('User data is not available');
+    }
+  };
+
+  const handleLeaveData = () => {
+    if (userData) {
+      navigation.navigate('LeaveData', {
+        userName: userData.result.name,
+        employeeCode: userData.result.emp_code,
+        userId: userData.result.emp_id,
+      });
+    } else {
+      console.error('User data is not available');
+    }
+  };
+  const handlesignout = async () => {
+    try {
+      await stopTracking();
+      // await AsyncStorage.removeItem('userData');
+      // await AsyncStorage.removeItem('token');
+      navigation.reset({index: 0, routes: [{name: 'Login'}]});
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleNotification = () => {
+    if (
+      userData &&
+      ((userData.result.parent && userData.result.parent !== 'hr.employee()') ||
+        userData.result.leave_manager)
+    ) {
+      navigation.navigate('NotificationPage', {
+        userName: userData.result.name,
+        employeeCode: userData.result.emp_code,
+        userId: userData.result.emp_id,
+      });
+    } else {
+      console.error('User data is not available or parent field is empty');
+    }
+  };
+
+  const getPunchTime = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const punchTime = await AsyncStorage.getItem('punch_time');
+
+      if (punchTime) {
+        const punchDate = new Date(punchTime).toISOString().split('T')[0];
+        if (punchDate === today) {
+          setButtonLabel('Check Out');
+          setPunchType('IN');
+          setCheckInTime(punchTime);
+        } else {
+          setButtonLabel('Check In');
+          setPunchType('OUT');
+          setCheckInTime(null);
+        }
+      } else {
+        setButtonLabel('Check In');
+        setPunchType('OUT');
+        setCheckInTime(null);
+      }
+    } catch (error) {
+      console.error('Error fetching punch time:', error);
+      setButtonLabel('Check In');
+      setPunchType('OUT');
+      setCheckInTime(null);
+    }
+  };
+
+
+  const activeTracking = (
+  <View style={styles.activeTrackingContainer}>
+    <View style={styles.topRow}>
+      <View>
+        <Text style={styles.statusLabel}>Tracking Status</Text>
+        <Text style={styles.statusText}>Active</Text>
+      </View>
+
+      <View style={styles.iconContainer}>
+        <Icon name="heart-pulse" size={34} color="#20C05C" />
+      </View>
+    </View>
+
+    <Text style={styles.dutyText}>
+      You are on duty{"\n"}
+      <Text style={styles.sinceText}>Since {checkInTime}</Text>
+    </Text>
+
+    <TouchableOpacity style={styles.liveButton}
+     onPress={() => {
+    // console.log("Button Pressed");
+    // onStart();
+    onStop();
+  }}>
+      <Text style={styles.liveButtonText}>View Live</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+
+
+
+const onStart = async () => {
+    try {
+      await startTracking();
+      console.log('Tracking Started');
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const onStop = async () => {
+    try {
+      await stopTracking();
+      console.log('Tracking Stopped');
+    } catch (e) {
+      console.log(e);
+    }
+  };
+ 
+
+  return (
+    <ScrollView
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? COLORS.black : COLORS.BACKGROUND,
+      }}>
+      <View
+        style={{
+          ...styles.container,
+          backgroundColor: isDark ? COLORS.black : COLORS.BACKGROUND,
+        }}>
+        <View
+          style={{
+            backgroundColor: COLORS.BLUE,
+            padding: 15,
+            borderBottomLeftRadius: 30,
+            borderBottomRightRadius: 30,
+          }}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.name}>{userData?.result.name}</Text>
+            </View>
+            <TouchableOpacity onPress={openImagePicker}>
+              <Image
+                source={
+                  imageUri ? {uri: imageUri} : require('../../assets/User.jpeg')
+                }
+                resizeMode="cover"
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Schedule Card */}
+          <View style={styles.scheduleCard}>
+            <View
+              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              <Text style={styles.scheduleDate}>Today</Text>
+              <Text style={styles.scheduleTime}>
+                {new Date().toLocaleDateString('en-GB', {
+                  weekday: 'short',
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </Text>
+            </View>
+
+            <Text
+              style={{
+                ...styles.scheduleTime,
+                fontSize: 30,
+                color: COLORS.black,
+                alignSelf: 'center',
+                padding: 10,
+              }}>
+              Attendance Time
+            </Text>
+            <View style={styles.timerContainer}>
+              {checkInTime ? (
+                <Text style={styles.timerText}>
+                  Time: {moment(checkInTime).format('hh:mm A')}
+                </Text>
+              ) : (
+                <Text style={styles.timerText}>Not Checked In</Text>
+              )}
+            </View>
+
+            <ButtonCompo
+              title={buttonLabel}
+              onPress={async () => {
+                const now = new Date().toISOString();
+                await AsyncStorage.removeItem('punch_time');
+                setCheckInTime(now);
+                setPunchType(buttonLabel === 'Check In' ? 'IN' : 'OUT');
+
+                setButtonLabel(prev =>
+                  prev === 'Check In' ? 'Check Out' : 'Check In',
+                );
+
+                console.log('Updated punch_time:', now);
+                navigation.navigate('Selfie');
+              }}
+            />
+          </View>
+        </View>
+        {activeTracking}
+
+        {/* Actions Row */}
+
+        <View style={{flexDirection: 'row'}}>
+          <TouchableOpacity
+            style={{...styles.card,backgroundColor: COLORS.LIGHT_BLUE}}
+            onPress={handleLeaveRequest}>
+            <Ionicons
+            //  name="document-text-outline"
+              name={'create-outline'}
+              size={25}
+              color={COLORS.black}
+              style={{marginRight: 10}}
+            />
+            <Text style={styles.actionLabel}>{'Leave Request'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={{...styles.card,backgroundColor: COLORS.LIGHT_PINK}} onPress={handleLeaveData}>
+            <Ionicons
+              name={'document-text-outline'}
+              size={25}
+              color={COLORS.black}
+              style={{marginRight: 10}}
+            />
+            <Text style={styles.actionLabel}>{'Leave Records'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{flexDirection: 'row'}}>
+          {userData &&
+            ((userData.result.parent &&
+              userData.result.parent !== 'hr.employee()') ||
+              userData.result.leave_manager) && (
+              <TouchableOpacity
+                style={{...styles.card,backgroundColor: COLORS.PURPLE}}
+                onPress={handleNotification}>
+                <View style={{position: 'relative', marginRight: 10}}>
+                  <Ionicons
+                    name={'notifications-outline'}
+                    size={25}
+                    color={COLORS.black}
+                  />
+
+                  {/* Badge View */}
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{natificationCount}</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.actionLabel}>{'Notifications'}</Text>
+              </TouchableOpacity>
+            )}
+          <TouchableOpacity style={{...styles.card,backgroundColor: COLORS.LIGHT_ORANGE}} onPress={handlesignout}>
+            <Ionicons
+              name="log-out-outline"
+              size={25}
+              color={COLORS.black}
+              style={{marginRight: 10}}
+            />
+            <Text style={styles.actionLabel}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Selfie Modal */}
+        <SelfieModal
+          visible={showModal}
+          onClose={async () => {
+            setShowModal(false);
+            await handleAttendance();
+          }}
+          navigation={navigation}
+        />
+        <Loader visible={isLoding} />
+      </View>
+    </ScrollView>
+  );
+};
+
+const ActionButton = ({icon, label, onPress}) => (
+  <TouchableOpacity style={styles.actionButton} onPress={onPress}>
+    <Ionicons name={icon} size={35} color={COLORS.black} />
+    <Text style={styles.actionLabel}>{label}</Text>
+  </TouchableOpacity>
+);
+const ActionButtonView = ({
+  icon,
+  label,
+  onPress,
+  iconColor,
+  bgColor,
+}) => (
+  <TouchableOpacity
+    style={styles.actionItem}
+    activeOpacity={0.8}
+    onPress={onPress}>
+    <View style={[styles.iconContainer, {backgroundColor: bgColor}]}>
+      <Ionicons name={icon} size={28} color={iconColor} />
+    </View>
+
+    <Text style={styles.actionLabel}>{label}</Text>
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#F8F8F8',
+    paddingBottom: 40,
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  greeting: {
+    fontSize: 20,
+    color: COLORS.white,
+    fontWeight: '800',
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  role: {
+    fontSize: 16,
+    color: COLORS.white,
+  },
+  profileImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  scheduleCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 20,
+    justifyContent: 'space-between',
+    elevation: 2,
+  },
+  scheduleDate: {
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  scheduleTime: {
+    fontSize: 14,
+    color: COLORS.black,
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    position: 'relative',
+  },
+  timerText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2196F3',
+    marginLeft: 10,
+  },
+  timerStatusText: {
+    position: 'absolute',
+    right: 10,
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    backgroundColor: COLORS.white,
+    padding: 15,
+    marginHorizontal: 16,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.34,
+    shadowRadius: 6.27,
+    elevation: 10,
+    marginTop: 16,
+    flexWrap: 'wrap',
+  },
+  actionButton: {
+    alignItems: 'center',
+    width: '23%',
+  },
+  actionLabel: {
+    fontSize: 14,
+    color: COLORS.black,
+    marginTop: 5,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 25,
+    marginBottom: 10,
+    color: '#333',
+  },
+  attendanceItem: {
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
+    elevation: 1,
+  },
+  attendanceDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 5,
+    color: '#333',
+  },
+  attendanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  timeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  timeText: {
+    color: '#555',
+    fontSize: 14,
+  },
+  activeTimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  activeTimerText: {
+    color: '#2196F3',
+    fontWeight: 'bold',
+    marginLeft: 5,
+  },
+  noAttendanceContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 10,
+  },
+  noAttendanceText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 10,
+  },
+  card: {
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: COLORS.white,
+    marginLeft: 10,
+    width: '46%',
+    gap: 10,
+    // marginBottom: 10,
+    borderRadius: 30,
+    marginTop: 20,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+ activeTrackingContainer: {
+    backgroundColor: '#34C759',
+    borderRadius: 20,
+    padding: 10,
+    marginHorizontal: 20,
+    marginTop: 10,
+  },
+
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+
+  statusLabel: {
+    fontSize: 16,
+    color: '#EAF8EE',
+    fontWeight: '500',
+  },
+
+  statusText: {
+    fontSize: 38,
+    fontWeight: '700',
+    color: '#fff',
+    // marginTop: 6,
+  },
+
+  iconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  dutyText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    // marginTop: 30,
+    lineHeight: 28,
+  },
+
+  sinceText: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#fff',
+  },
+
+  liveButton: {
+    alignSelf: 'flex-end',
+    // marginTop: 30,
+    backgroundColor: '#fff',
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+
+  liveButtonText: {
+    color: '#34C759',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+});
+
+export default DashboardScreen;
+// Jamshed end bug id   2555
