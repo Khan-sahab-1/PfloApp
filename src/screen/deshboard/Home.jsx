@@ -47,6 +47,7 @@ import {
   getEmployeePunchTime,
   removeLegacyPunchTime,
 } from '../../utils/attendanceStorage';
+import DeviceInfo from 'react-native-device-info';
 const DashboardScreen = ({navigation, route}) => {
   // console.log(route?.,'Route Params in Home Screen')
   const [userData, setUserData] = useState(null);
@@ -70,7 +71,7 @@ const DashboardScreen = ({navigation, route}) => {
   const employeeLeaveCode = userData?.result?.emp_code;
   // console.log(employeeLeaveCode, 'Employee Code');
   // console.log(meetings, 'server Mil raha h');
-  console.log(userData, 'User data');
+  console.log(userData, 'User data->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
   const colorschema = useColorScheme();
   const isDark = colorschema === 'dark';
   const [isTodayPunched, setIsTodayPunched] = useState(false);
@@ -78,6 +79,11 @@ const DashboardScreen = ({navigation, route}) => {
   const [punchType, setPunchType] = useState(null);
   const [isLoding, setisLoding] = useState(false);
   const [trackingActive, setTrackingActive] = useState(isTrackingRunning());
+
+  const isTablet = DeviceInfo.isTablet();
+  let type = DeviceInfo.getDeviceType();
+
+console.log('Tablet:', isTablet,type);
 
   const openImagePicker = () => {
     const options = {
@@ -569,7 +575,7 @@ const handleLiveTracking = () => {
                 {userData?.result?.name || 'Welcome back'}
               </Text>
             </View>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               activeOpacity={0.8}
               style={styles.avatarButton}
               onPress={openImagePicker}>
@@ -581,7 +587,7 @@ const handleLiveTracking = () => {
                 style={styles.profileImage}
               />
               <View style={styles.avatarStatus} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           <View style={styles.datePill}>
             <Ionicons name="calendar-outline" size={14} color="#BFD7FF" />

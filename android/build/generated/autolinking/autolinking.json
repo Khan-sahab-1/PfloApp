@@ -58,7 +58,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "/Users/jamshedali/Desktop/pflo/node_modules/@react-native-community/datetimepicker/RNDateTimePicker.podspec",
-          "version": "9.1.0",
+          "version": "9.2.1",
           "configurations": [],
           "scriptPhases": []
         },
@@ -406,7 +406,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "/Users/jamshedali/Desktop/pflo/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
-          "version": "5.8.0",
+          "version": "5.9.1",
           "configurations": [],
           "scriptPhases": []
         },
@@ -709,8 +709,7 @@
         },
         {
           "name": "--terminal <string>",
-          "description": "Launches the Metro Bundler in a new window using the specified terminal path.",
-          "default": "vscode"
+          "description": "Launches the Metro Bundler in a new window using the specified terminal path."
         },
         {
           "name": "--binary-path <string>",
@@ -869,8 +868,7 @@
         },
         {
           "name": "--terminal <string>",
-          "description": "Launches the Metro Bundler in a new window using the specified terminal path.",
-          "default": "vscode"
+          "description": "Launches the Metro Bundler in a new window using the specified terminal path."
         },
         {
           "name": "--appId <string>",

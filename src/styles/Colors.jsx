@@ -4,7 +4,8 @@
 export const COLORS = {
   black: '#111111',
   white: '#ffffff',
-  BLUE: '#003e79',
+  // BLUE: '#003e79',
+  BLUE:'#071B35',
   GRAY: '#E8E8E8',
   BACKGROUND: '#f2f2f2',
   ISDARK: '#222',

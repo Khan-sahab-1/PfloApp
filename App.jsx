@@ -9,6 +9,8 @@ import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {store} from './src/redux/store';
 import Routes from './src/route/Routes';
 import {BASE_URL} from './src/utils/apiurls';
+import { COLORS } from './src/styles/Colors';
+
 
 const App = () => {
   // const [currentUrl, setCurrentUrl] = useState("http://192.168.2.39:6565");
@@ -49,9 +51,10 @@ const App = () => {
       <Provider store={store}>
         <AuthContext.Provider value={{currentUrl, setCurrentUrl}}>
           <SafeAreaProvider>
+            
             <StatusBar
               translucent
-              backgroundColor="transparent"
+              backgroundColor={COLORS.BLUE}
               barStyle="light-content"
             />
             <SafeAreaView style={styles.container}>
