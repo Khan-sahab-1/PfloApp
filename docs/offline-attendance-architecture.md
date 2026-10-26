@@ -1,6 +1,27 @@
+> Superseded flow: see [automatic-offline-sync.md](automatic-offline-sync.md) for the current saved-employee, public v4, and background scheduling implementation. The older login-before-sync notes below are historical.
+
 # PFLO offline login and attendance — proposed structure
 
-Status: design only. No runtime behavior, dependencies, or backend endpoints are changed.
+Status: permission-gated offline access and SQLite capture are now implemented in `src/offline`.
+The structure below is the original proposal, not a list of implemented modules.
+
+## Current implementation (10 September 2026)
+
+- Login reads `result.employee_name`; only boolean `offline_attendance: true` persists offline authorization.
+- Saved authorization contains a minimal profile and server URL, never the password/PIN.
+- Login while disconnected restores only the last authorized employee on the selected server. Missing/false permission remains online-only.
+- Offline attendance uses an isolated attendance dashboard, selfie/GPS capture, permanent private photo copies and a SQLite `pending` queue scoped by server and employee ID.
+- Disconnect while logged in switches eligible users to offline attendance; other users return to Login. Reconnect from offline requires a fresh online login.
+- Logout clears saved authorization but preserves pending attendance/photos.
+- Upload now runs after successful online login using the supplied multipart `/attendance/mark2/v2` API. SQLite rows are uploaded in sequence, scoped to the logged-in server and employee; original `times` and private selfie are preserved.
+- Queue lifecycle: `pending -> uploading -> synced`. Uncertain responses become `review_required`; abandoned `uploading` rows also block replay. All unsynced statuses remain visible in the pending count and block new online attendance.
+- Acknowledgment requires `attendance_marked === true`, the original `punch_time`, and the endpoint's success message. The supplied endpoint incorrectly leaves `attendance_marked` true on some create failures; those responses are not acknowledged.
+- **No automatic retry after an uncertain upload:** this backend ignores `attendance_id` and `action`, and lacks deduplication. Administrator/backend reconciliation is needed for review rows; do not reset them to pending without checking server records. Ordinary records not yet sent remain pending for the next online login.
+- Synced rows and selfies remain stored; retention cleanup is not implemented. No real attendance was submitted during automated validation.
+- Backend must confirm original timestamps, explicit actions, idempotency IDs, session employee validation and per-record acknowledgments before enabling sync.
+- Native dependencies: NetInfo and react-native-sqlite-storage. `npm install` runs the SQLite Android Gradle compatibility script. iOS requires CocoaPods installation and device verification.
+- Android debug compilation and mocked JS tests are checked; airplane-mode/device persistence and iOS behavior still need device verification.
+
 
 ## Proposed folders
 

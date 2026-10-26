@@ -10,7 +10,7 @@ const ButtonCompo = ({
   textStyle,
   disabled = false,
   loading = false,
-  backgroundColor = "#007bff",
+  backgroundColor = '#71a6ea',
   textColor = "#fff",
   borderRadius = 8,
   padding = 12

@@ -1,11 +1,17 @@
 buildscript {
     ext {
-        buildToolsVersion = "35.0.0"
+        buildToolsVersion = "36.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 35
-       targetSdkVersion = 35
-       ndkVersion = "27.1.12297006"
-       kotlinVersion = "1.9.24"
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "1.9.24"
+    //     buildToolsVersion = "35.0.0"
+    //     minSdkVersion = 24
+    //     compileSdkVersion = 35
+    //    targetSdkVersion = 35
+    //    ndkVersion = "27.1.12297006"
+    //    kotlinVersion = "1.9.24"
        // Keep react-native-geolocation-service compiled against the same
        // location API version that react-native-maps provides at runtime.
        playServicesLocationVersion = "21.3.0"

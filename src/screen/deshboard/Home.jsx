@@ -1,3 +1,4 @@
+import {logoutAttendance} from '../../offline/session';
 // Jamshed start bug id   2555
 // Description: This file defines the Home component, which serves as the main dashboard for the application. It displays user information, attendance status, and provides navigation to various features such as leave requests, notifications, and sign-out. The component fetches user data from the server, manages check-in/check-out functionality with time tracking, and integrates with the device's calendar to manage meetings. The design is responsive to light and dark themes, and it includes error handling for API calls and user interactions to ensure a smooth user experience.
 
@@ -380,7 +381,8 @@ console.log('Tablet:', isTablet,type);
   };
   const handlesignout = async () => {
     try {
-      await stopTracking();
+      await logoutAttendance();
+      await stopTracking().catch(() => {});
       setTrackingActive(false);
       // await AsyncStorage.removeItem('userData');
       // await AsyncStorage.removeItem('token');
@@ -453,7 +455,7 @@ const handleLiveTracking = () => {
         </View>
 
         <View style={styles.iconContainer}>
-          <Icon name="heart-pulse" size={34} color="#20C05C" />
+          <Icon name="heart-pulse" size={26} color="#20C05C" />
         </View>
       </View>
 
@@ -465,13 +467,7 @@ const handleLiveTracking = () => {
       <TouchableOpacity
         style={styles.liveButton}
         onPress={() => {
-          // console.log("Button Pressed");
           trackingActive ? onStop() : onStart();
-          // onStop();
-          // navigation.navigate(navigationString.MAPSPREVIEW, {
-          // latitude: 37.78825, // Replace with actual latitude
-          // longitude: -122.4324, // Replace with actual longitude
-          // })
         }}>
         <Text style={styles.liveButtonText}>
           {trackingActive ? 'Stop Tracking' : 'Start Tracking'}
@@ -525,414 +521,225 @@ const handleLiveTracking = () => {
     ((userData.result.parent && userData.result.parent !== 'hr.employee()') ||
       userData.result.leave_manager);
 
-  const ActionCard = ({
-    icon,
-    title,
-    subtitle,
-    color,
-    background,
-    onPress,
-    badge,
-  }) => (
-    <TouchableOpacity
-      activeOpacity={0.82}
-      style={[styles.quickAction, {backgroundColor: background}]}
-      onPress={onPress}>
-      <View style={[styles.quickActionIcon, {backgroundColor: color}]}>
-        <Ionicons name={icon} size={22} color="#FFFFFF" />
-        {badge > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-          </View>
-        )}
+  const employeeName = userData?.result?.name?.trim() || 'Welcome back';
+  const initials = employeeName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  const surface = isDark ? '#192522' : '#FFFFFF';
+  const ink = isDark ? '#F1F5EF' : '#18352D';
+
+  const ActionCard = ({icon, title, subtitle, color, onPress, badge}) => (
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={`${title}. ${subtitle}`}
+      activeOpacity={0.75} onPress={onPress}
+      style={[styles.quickAction, {backgroundColor: surface, borderColor: isDark ? '#2D3B35' : '#E6EAE1'}]}>
+      <View style={styles.actionTop}>
+        <View style={[styles.quickActionIcon, {backgroundColor: isDark ? '#29382F' : '#F2F5EC'}]}>
+          <Ionicons name={icon} size={18} color={isDark ? '#C4DBA4' : color} />
+          {badge > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text></View>}
+        </View>
+        <Ionicons name="arrow-up-outline" size={14} color={isDark ? '#8CA294' : '#87998C'} style={styles.diagonalArrow} />
       </View>
-      <View style={styles.quickActionCopy}>
-        <Text style={[styles.actionLabel, isDark && styles.textLight]}>
-          {title}
-        </Text>
-        <Text style={styles.actionSubtitle} numberOfLines={1}>
-          {subtitle}
-        </Text>
-      </View>
-      <Ionicons name="arrow-forward" size={18} color={color} />
+      <Text style={[styles.actionLabel, {color: ink}]}>{title}</Text>
+      <Text style={[styles.actionSubtitle, isDark && styles.mutedDark]}>{subtitle}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <>
-      {/* <StatusBar barStyle="light-content" backgroundColor="#071B35" /> */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        >
-        <View style={styles.hero}>
-          {/* <View style={styles.heroOrbOne} /> */}
-          {/* <View style={styles.heroOrbTwo} /> */}
-          <View style={styles.header}>
-            <View style={styles.headerCopy}>
-              <Text style={styles.greeting}>{getGreeting()}</Text>
-              <Text style={styles.name} numberOfLines={1}>
-                {userData?.result?.name || 'Welcome back'}
-              </Text>
-            </View>
-            {/* <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.avatarButton}
-              onPress={openImagePicker}>
-              <Image
-                source={
-                  imageUri ? {uri: imageUri} : require('../../assets/User.jpeg')
-                }
-                resizeMode="cover"
-                style={styles.profileImage}
-              />
-              <View style={styles.avatarStatus} />
-            </TouchableOpacity> */}
+    <ScrollView showsVerticalScrollIndicator={false}
+      style={{backgroundColor: isDark ? '#101B17' : '#F5F6F0'}}
+      contentContainerStyle={styles.scrollContent}>
+      <View style={styles.hero}>
+        <View pointerEvents="none" style={styles.heroRing} />
+        <View pointerEvents="none" style={styles.heroRingInner} />
+        <View style={styles.brandRow}>
+          <View style={styles.brandLockup}>
+            <View style={styles.brandMark}><Ionicons name="leaf" size={14} color="#193C31" /></View>
+            <Text style={styles.brandText}>Pflo<Text style={styles.brandDot}>.</Text></Text>
           </View>
           <View style={styles.datePill}>
-            <Ionicons name="calendar-outline" size={14} color="#BFD7FF" />
-            <Text style={styles.dateText}>
-              {new Date().toLocaleDateString('en-GB', {
-                weekday: 'long',
-                day: '2-digit',
-                month: 'short',
-              })}
-            </Text>
+            <Ionicons name="calendar-outline" size={11} color="#D2DFC7" />
+            <Text style={styles.dateText}>{new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short'})}</Text>
           </View>
-          <View style={styles.attendanceCard}>
-            <View style={styles.attendanceTopRow}>
-              <View style={styles.attendanceHeading}>
-                <Text style={styles.attendanceEyebrow}>TODAY'S ATTENDANCE</Text>
-                <Text style={styles.attendanceTitle}>
-                  {checkInTime ? 'Checked in' : 'Ready when you are'}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.statusPill,
-                  checkInTime && styles.statusPillActive,
-                ]}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    checkInTime && styles.statusDotActive,
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.statusPillText,
-                    checkInTime && styles.statusPillTextActive,
-                  ]}>
-                  {checkInTime ? 'On duty' : 'Not started'}
-                </Text>
-              </View>
+        </View>
+        <View style={styles.header}>
+          <View style={styles.headerCopy}>
+            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.name} numberOfLines={2}>{employeeName}</Text>
+            {/* <Text style={styles.heroCaption}>A little focus. A great day ahead.</Text> */}
+          </View>
+          <View style={styles.avatar}><Text style={styles.initials}>{initials}</Text></View>
+        </View>
+        {/* <View style={styles.heroBottom}>
+          <View style={styles.employeeTag}><Ionicons name="id-card-outline" size={12} color="#B6CCBA" />
+            <Text style={styles.employeeCode}>{userData?.result?.emp_code || 'Your workspace'}</Text>
+          </View>
+          <Text style={styles.dayText}>{new Date().toLocaleDateString('en-GB', {weekday: 'long'})}</Text>
+        </View> */}
+      </View>
+
+      <View style={styles.body}>
+        <View style={[styles.attendanceCard, {backgroundColor: surface, borderColor: isDark ? '#304136' : '#E3E8DC'}]}>
+          <View style={styles.attendanceTopRow}>
+            <View style={styles.attendanceHeading}>
+              <Text style={[styles.attendanceEyebrow, isDark && styles.mutedDark]}>YOUR WORKDAY</Text>
+              {/* <Text style={[styles.attendanceTitle, {color: ink}]}>{checkInTime ? 'Make today count.' : 'Let’s get started.'}</Text> */}
             </View>
-            <View style={styles.timeRow}>
-              <Text style={styles.attendanceTime}>
-                {checkInTime ? moment(checkInTime).format('hh:mm') : '--:--'}
-              </Text>
-              <Text style={styles.attendancePeriod}>
-                {checkInTime ? moment(checkInTime).format('A') : ''}
-              </Text>
+            <View style={[styles.statusPill, checkInTime && styles.statusActive]}>
+              <View style={[styles.statusDot, checkInTime && {backgroundColor: '#26704E'}]} />
+              <Text style={styles.statusTextSmall}>{checkInTime ? 'On duty' : 'Not started'}</Text>
             </View>
-            <Text style={styles.timeCaption}>
-              {checkInTime
-                ? 'Your check-in time'
-                : 'You have not checked in today'}
-            </Text>
-            <ButtonCompo
-              title={buttonLabel}
-              backgroundColor={checkInTime ? '#EEF4FF' : '#176BFF'}
-              textColor={checkInTime ? '#176BFF' : '#FFFFFF'}
-              borderRadius={16}
-              padding={10}
-              style={styles.attendanceButton}
-              textStyle={styles.attendanceButtonText}
-              onPress={() =>
-                navigation.navigate('Selfie', {
-                  attendanceAction:
-                    buttonLabel === 'Check In' ? 'CHECK_IN' : 'CHECK_OUT',
-                  userinfo: userData?.result,
-                })
-              }
-            />
+          </View>
+          <View style={styles.clockRow}>
+            <View style={styles.clockCopy}>
+              <View style={styles.timeRow}>
+                <Text adjustsFontSizeToFit numberOfLines={1} style={[styles.attendanceTime, {color: ink}]}>
+                  {checkInTime ? moment(checkInTime).format('hh:mm') : '--:--'}
+                </Text>
+                <Text style={styles.attendancePeriod}>{checkInTime ? moment(checkInTime).format('A') : ''}</Text>
+              </View>
+              <Text style={[styles.timeCaption, isDark && styles.mutedDark]}>{checkInTime ? 'Checked in at' : 'Your day begins with a check-in'}</Text>
+            </View>
+            <View style={[styles.clockSeal, isDark && {backgroundColor: '#283A2F', borderColor: '#40523C'}]}>
+              <Ionicons name={checkInTime ? 'checkmark' : 'time-outline'} size={24} color={isDark ? '#D4E8B5' : '#375A3D'} />
+            </View>
+          </View>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={buttonLabel} disabled={!userData?.result}
+            activeOpacity={0.8} style={[styles.checkButton, !userData?.result && {opacity: 0.5}]}
+            onPress={() => navigation.navigate('Selfie', {
+              attendanceAction: buttonLabel === 'Check In' ? 'CHECK_IN' : 'CHECK_OUT', userinfo: userData?.result,
+            })}>
+            <View style={styles.checkButtonCopy}><Ionicons name={checkInTime ? 'exit-outline' : 'scan-outline'} size={18} color="#16382B" />
+              <Text style={styles.checkButtonText}>{buttonLabel}</Text>
+            </View>
+            <View style={styles.buttonArrow}><Ionicons name="arrow-forward" size={16} color="#16382B" /></View>
+          </TouchableOpacity>
+          <View style={styles.captureHint}><Ionicons name="camera-outline" size={12} color="#84917D" />
+            <Text style={[styles.captureHintText, isDark && styles.mutedDark]}>Selfie & location verification</Text>
           </View>
         </View>
 
-        <View style={[styles.content, isDark && styles.contentDark]}>
-          {/* {userData?.result?.live_tracking_enabled ? activeTracking : null} */}
-          <View style={styles.sectionHeadingRow}>
-            <Text style={[styles.sectionTitle, isDark && styles.textLight]}>
-              Quick actions
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              Everything you need, one tap away
-            </Text>
-          </View>
-          <View style={styles.actionsGrid}>
-            <ActionCard
-              icon="add-circle-outline"
-              title="Request leave"
-              subtitle="Create a new request"
-              color="#176BFF"
-              background={isDark ? '#132238' : '#EDF4FF'}
-              onPress={handleLeaveRequest}
-            />
-            <ActionCard
-              icon="document-text-outline"
-              title="Leave records"
-              subtitle="View your history"
-              color="#7C3AED"
-              background={isDark ? '#211A38' : '#F4F0FF'}
-              onPress={handleLeaveData}
-            />
-            {canReviewLeaves && (
-              <ActionCard
-                icon="notifications-outline"
-                title="Notifications"
-                subtitle="Review team requests"
-                color="#E8590C"
-                background={isDark ? '#342117' : '#FFF3E9'}
-                badge={natificationCount}
-                onPress={handleNotification}
-              />
-            )}
-            {canReviewLeaves &&  <ActionCard
-              icon="map"
-              title="Live Tracking"
-              subtitle="End this session"
-              color="#26b2dc"
-              background={isDark ? '#351B22' : '#c2daf7'}
-              onPress={handleLiveTracking}
-            />}
-           { <ActionCard
-              icon="log-out-outline"
-              title="Sign out"
-              subtitle="End this session"
-              color="#DC2626"
-              background={isDark ? '#351B22' : '#FFF0F1'}
-              onPress={handlesignout}
-            />}
-            
-          </View>
-          {/* <Text style={styles.footerText}>PFLO • WORK, BEAUTIFULLY</Text> */}
+        <View style={styles.sectionHeadingRow}>
+          <View><Text style={[styles.sectionTitle, {color: ink}]}>Your essentials</Text>
+            {/* <Text style={[styles.sectionSubtitle, isDark && styles.mutedDark]}>A little less admin. A little more flow.</Text> */}
+            </View>
+          <Ionicons name="grid-outline" size={16} color="#879582" />
         </View>
-        <Loader visible={isLoding} />
-      </ScrollView>
-    </>
+        <View style={styles.actionsGrid}>
+          <ActionCard icon="sunny-outline" title="Request leave" subtitle="Make time for yourself" color="#7B653C" onPress={handleLeaveRequest} />
+          <ActionCard icon="file-tray-full-outline" title="Leave records" subtitle="All your requests, together" color="#4B6654" onPress={handleLeaveData} />
+          {canReviewLeaves && <ActionCard icon="notifications-outline" title="Notifications" subtitle="Review what needs you" color="#7C645D" badge={notificationCount} onPress={handleNotification} />}
+          {/* {canReviewLeaves && <ActionCard icon="navigate-outline" title="Live tracking" subtitle="See your team on the map" color="#476876" onPress={handleLiveTracking} />} */}
+        </View>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Sign out" activeOpacity={0.7} onPress={handlesignout}
+          style={[styles.signOutRow, {borderColor: isDark ? '#2E3C33' : '#E0E5DA'}]}>
+          <View style={styles.signOutCopy}><Ionicons name="log-out-outline" size={16} color={isDark ? '#A7B7AA' : '#617365'} />
+            <Text style={[styles.signOutText, isDark && styles.mutedDark]}>Sign out</Text></View>
+          <Ionicons name="chevron-forward" size={14} color="#879582" />
+        </TouchableOpacity>
+        {/* <View style={styles.footer}><View style={styles.footerLine} /><Text style={styles.footerLabel}>SPACE TO DO YOUR BEST</Text><View style={styles.footerLine} /></View> */}
+      </View>
+      <Loader visible={isLoding} />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {flex: 1, backgroundColor: '#071B35'},
-  safeAreaDark: {backgroundColor: '#07111F'},
-  scrollContent: {flexGrow: 1, backgroundColor: '#F6F8FC'},
-  hero: {
-    backgroundColor: '#071B35',
-    paddingHorizontal: 20,
-    // paddingTop: 12,
-    paddingBottom: 10,
-    borderBottomLeftRadius: 34,
-    borderBottomRightRadius: 34,
-    overflow: 'hidden',
-  },
-
- 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerCopy: {flex: 1, paddingRight: 16},
-  greeting: {
-    fontSize: 12,
-    color: '#9EB7D5',
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    marginBottom: 4,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-  },
-  avatarButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    padding: 3,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-  },
-  profileImage: {width: 50, height: 50, borderRadius: 25},
-  avatarStatus: {
-    position: 'absolute',
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    right: 1,
-    bottom: 3,
-    backgroundColor: '#22C55E',
-    borderWidth: 2,
-    borderColor: '#071B35',
-  },
-  datePill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.09)',
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 20,
-    marginTop: 8,
-    marginBottom: 14,
-  },
-  dateText: {color: '#D7E7FA', fontSize: 10, fontWeight: '600'},
-  attendanceCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
-    padding: 18,
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 14},
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 10,
-  },
-  attendanceTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  attendanceHeading: {flex: 1, paddingRight: 8},
-  attendanceEyebrow: {
-    fontSize: 8,
-    color: '#718096',
-    fontWeight: '800',
-    letterSpacing: 1.2,
-  },
-  attendanceTitle: {
-    fontSize: 14,
-    color: '#10233E',
-    fontWeight: '800',
-    marginTop: 5,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  statusPillActive: {backgroundColor: '#E9FAF1'},
-  statusDot: {width: 7, height: 7, borderRadius: 4, backgroundColor: '#94A3B8'},
-  statusDotActive: {backgroundColor: '#18A957'},
-  statusPillText: {fontSize: 10, color: '#64748B', fontWeight: '700'},
-  statusPillTextActive: {color: '#108443'},
-  timeRow: {flexDirection: 'row', alignItems: 'baseline', marginTop: 10},
-  attendanceTime: {
-    fontSize: 20,
-    color: '#0C1F3A',
-    fontWeight: '800',
-    letterSpacing: -2,
-  },
-  attendancePeriod: {
-    fontSize: 14,
-    color: '#176BFF',
-    fontWeight: '800',
-    marginLeft: 8,
-  },
-  timeCaption: {fontSize: 10, color: '#7B8CA4', marginTop: 1},
-  attendanceButton: {marginTop: 16, marginBottom: 0},
-  attendanceButtonText: {fontSize: 13, fontWeight: '800'},
-  content: {
-    flex: 1,
-    backgroundColor: '#F6F8FC',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 30,
-  },
-  contentDark: {backgroundColor: '#08111F'},
-  textLight: {color: '#F8FAFC'},
-  sectionHeadingRow: {marginBottom: 12},
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#10233E',
-    letterSpacing: -0.3,
-  },
-  sectionSubtitle: {fontSize: 10, color: '#8290A5', marginTop: 4},
-  actionsGrid: {gap: 11},
-  quickAction: {
-    minHeight: 78,
-    borderRadius: 20,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickActionCopy: {flex: 1, marginLeft: 13},
-  actionLabel: {fontSize: 12, color: '#13243D', fontWeight: '800'},
-  actionSubtitle: {fontSize: 10, color: '#7C899C', marginTop: 4},
-  badge: {
-    position: 'absolute',
-    top: -6,
-    right: -7,
-    backgroundColor: '#EF4444',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  badgeText: {color: '#FFFFFF', fontSize: 9, fontWeight: '800'},
+  scrollContent: {flexGrow: 1, paddingBottom: 18},
+  hero: {backgroundColor: '#183C31', paddingHorizontal: 20, paddingTop: 18, paddingBottom: 34, overflow: 'hidden'},
+  heroRing: {position: 'absolute', width: 260, height: 260, borderRadius: 130, borderWidth: 1, borderColor: '#355246', top: 25, right: -140},
+  heroRingInner: {position: 'absolute', width: 200, height: 200, borderRadius: 100, borderWidth: 1, borderColor: '#355246', top: 55, right: -110},
+  brandRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18},
+  brandLockup: {flexDirection: 'row', alignItems: 'center', gap: 7},
+  brandMark: {width: 24, height: 24, borderRadius: 8, backgroundColor: '#D5E9B5', alignItems: 'center', justifyContent: 'center'},
+  brandText: {fontSize: 19, fontWeight: '800', color: '#F8FAF0', letterSpacing: -1},
+  brandDot: {color: '#D5E9B5'},
+  datePill: {flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: '#4A6254', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 6},
+  dateText: {color: '#E1E8D9', fontSize: 11, fontWeight: '600'},
+  header: {flexDirection: 'row', alignItems: 'center', gap: 12},
+  headerCopy: {flex: 1},
+  greeting: {fontSize: 12, color: '#B4C8B9', marginBottom: 5},
+  name: {fontSize: 20, lineHeight: 25, fontWeight: '700', color: '#F8FAF1', letterSpacing: -0.5},
+  heroCaption: {fontSize: 11, color: '#B4C8B9', marginTop: 7, lineHeight: 15},
+  avatar: {width: 42, height: 42, borderRadius: 15, backgroundColor: '#314F3E', borderWidth: 1, borderColor: '#5F7558', alignItems: 'center', justifyContent: 'center'},
+  initials: {color: '#D9EABF', fontSize: 14, fontWeight: '700'},
+  heroBottom: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16},
+  employeeTag: {flexDirection: 'row', alignItems: 'center', gap: 5},
+  employeeCode: {color: '#C4D5C4', fontSize: 11, fontWeight: '500'},
+  dayText: {color: '#AFC5B4', fontSize: 11},
+  body: {paddingHorizontal: 16, width: '100%', maxWidth: 640, alignSelf: 'center', marginTop: -18},
+  attendanceCard: {borderRadius: 18, padding: 16, borderWidth: 1, shadowColor: '#122F21', shadowOffset: {width: 0, height: 6}, shadowOpacity: 0.06, shadowRadius: 14, elevation: 3},
+  attendanceTopRow: {flexDirection: 'row', alignItems: 'flex-start', gap: 8},
+  attendanceHeading: {flex: 1},
+  attendanceEyebrow: {color: '#71806D', fontSize: 9, fontWeight: '700', letterSpacing: 1.3},
+  attendanceTitle: {fontSize: 15, fontWeight: '600', letterSpacing: -0.2, marginTop: 5},
+  statusPill: {flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: '#F0F2E9', borderRadius: 16},
+  statusActive: {backgroundColor: '#E5F1E4'},
+  statusDot: {width: 5, height: 5, borderRadius: 3, backgroundColor: '#8B9277'},
+  statusTextSmall: {fontSize: 9, fontWeight: '600', color: '#536349'},
+  clockRow: {flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 16},
+  clockCopy: {flex: 1},
+  timeRow: {flexDirection: 'row', alignItems: 'baseline'},
+  attendanceTime: {fontSize: 36, fontWeight: '300', letterSpacing: -1.5, fontVariant: ['tabular-nums'], flexShrink: 1},
+  attendancePeriod: {fontSize: 11, color: '#738269', marginLeft: 6, fontWeight: '600'},
+  timeCaption: {fontSize: 10, color: '#6F7D68', marginTop: 3, lineHeight: 14},
+  clockSeal: {width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: '#DDE5CC', backgroundColor: '#F4F7ED', alignItems: 'center', justifyContent: 'center'},
+  checkButton: {minHeight: 48, borderRadius: 14, backgroundColor: '#D6EBAF', paddingVertical: 8, paddingLeft: 15, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
+  checkButtonCopy: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  checkButtonText: {fontSize: 14, fontWeight: '700', color: '#193C2B'},
+  buttonArrow: {width: 30, height: 30, borderRadius: 10, backgroundColor: '#E7F3D1', alignItems: 'center', justifyContent: 'center'},
+  captureHint: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 11},
+  captureHintText: {fontSize: 9, color: '#788470'},
+  sectionHeadingRow: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 22, marginBottom: 12},
+  sectionTitle: {fontSize: 16, fontWeight: '600', letterSpacing: -0.3},
+  sectionSubtitle: {fontSize: 10, color: '#77836F', marginTop: 3, lineHeight: 14},
+  actionsGrid: {flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10},
+  quickAction: {width: '48.3%', borderRadius: 16, padding: 12, borderWidth: 1, minHeight: 110},
+  actionTop: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12},
+  quickActionIcon: {width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center'},
+  diagonalArrow: {transform: [{rotate: '45deg'}]},
+  actionLabel: {fontSize: 12.5, fontWeight: '600', lineHeight: 17},
+  actionSubtitle: {fontSize: 10, lineHeight: 14, color: '#768270', marginTop: 3},
+  mutedDark: {color: '#A9B8A4'},
+  badge: {position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#A8563E', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3},
+  badgeText: {color: '#FFFFFF', fontSize: 9, fontWeight: '700'},
+  signOutRow: {minHeight: 48, marginTop: 16, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2},
+  signOutCopy: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  signOutText: {fontSize: 12, color: '#617365', fontWeight: '500'},
+  footer: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14},
+  footerLine: {height: 1, backgroundColor: '#A6B299', width: 20, opacity: 0.4},
+  footerLabel: {fontSize: 8, letterSpacing: 1.3, color: '#849078', fontWeight: '600'},
   activeTrackingContainer: {
     backgroundColor: '#0D8F55',
-    borderRadius: 22,
-    padding: 18,
-    marginBottom: 22,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 18,
   },
   topRow: {flexDirection: 'row', justifyContent: 'space-between'},
-  statusLabel: {fontSize: 12, color: '#CCFBE1', fontWeight: '700'},
-  statusText: {fontSize: 28, fontWeight: '800', color: '#FFFFFF'},
+  statusLabel: {fontSize: 11, color: '#CCFBE1', fontWeight: '700'},
+  statusText: {fontSize: 22, fontWeight: '800', color: '#FFFFFF'},
   iconContainer: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  dutyText: {color: '#FFFFFF', fontSize: 14, fontWeight: '600', lineHeight: 22},
-  sinceText: {fontSize: 12, color: '#D1FAE5'},
+  dutyText: {color: '#FFFFFF', fontSize: 12, fontWeight: '600', lineHeight: 18},
+  sinceText: {fontSize: 11, color: '#D1FAE5'},
   liveButton: {
     alignSelf: 'flex-end',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
-  liveButtonText: {color: '#0D8F55', fontSize: 13, fontWeight: '800'},
+  liveButtonText: {color: '#0D8F55', fontSize: 12, fontWeight: '800'},
   footerText: {
     textAlign: 'center',
     color: '#A8B2C1',
     fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 1.4,
-    marginTop: 28,
+    letterSpacing: 1.2,
+    marginTop: 20,
   },
 });
 

@@ -103,6 +103,7 @@ const urls = {
   getAttendance: domain + '/attendance/mark/v2',
   getAttendance2: domain + '/attendance/mark2/v2',
   odooAutoMarkAttendance: domain + '/auto_mark_attendance',
+  offlineAttendance: domain + '/attendance/offline/sync/v4',
 
   // Leave
   getLeave: domain + '/leave/request/v2',
@@ -135,7 +136,7 @@ const urls = {
    gettagdata: domain + '/get/calendar/tagdata',
 
   // Leads
-  getLeadsData: domain + '/leads/data',
+  getLeadsData: domain + '/leads/data/v1',
   createLead: domain + '/create/leads',
   editLead: domain + '/edit/leads',
   fetchleadsDivision: domain + '/leads/division',

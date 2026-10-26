@@ -2,3 +2,18 @@ node_modules
 android/app/build/
 android/build/
 android/app/build/
+# Gradle / Android
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/local.properties
+*.iml
+.gradle/
+build/
+
+# React Native
+node_modules/
+ios/Pods/
+ios/build/
+.expo/

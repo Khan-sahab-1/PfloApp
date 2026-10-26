@@ -1,6 +1,6 @@
 import {StatusBar, StyleSheet} from 'react-native';
 import React, {useState} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import {Provider} from 'react-redux';
 import {AuthContext} from './src/Screens/Context';
 import FlashMessage from 'react-native-flash-message';
@@ -8,11 +8,14 @@ import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 
 import {store} from './src/redux/store';
 import Routes from './src/route/Routes';
+import ConnectionGuard from './src/offline/ConnectionGuard';
+import AutoSyncProvider from './src/offline/AutoSyncProvider';
 import {BASE_URL} from './src/utils/apiurls';
 import { COLORS } from './src/styles/Colors';
 
 
 const App = () => {
+  const navigationRef = useNavigationContainerRef();
   // const [currentUrl, setCurrentUrl] = useState("http://192.168.2.39:6565");
   //Jamshed Ali Added Start - Bug ID 2555
   // Description: Added state management for the current server URL with a default value, allowing dynamic updates to the server endpoint used throughout the application.
@@ -59,7 +62,9 @@ const App = () => {
             />
             <SafeAreaView style={styles.container}>
               {/* <StatusBar backgroundColor={COLORS.BLUE} /> */}
-              <NavigationContainer>
+              <NavigationContainer ref={navigationRef}>
+                <ConnectionGuard navigationRef={navigationRef} />
+                <AutoSyncProvider />
                 <Routes />
               </NavigationContainer>
               <FlashMessage position="center" duration={2000} />

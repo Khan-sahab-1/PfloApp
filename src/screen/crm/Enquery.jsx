@@ -117,7 +117,7 @@ const Enquery = ({route, navigation}) => {
           },
         },
       );
-      // console.log(response, 'enquery response');
+      console.log(response, 'enquery response');
       let leads = Array.isArray(response.result?.data)
         ? response.result.data
         : [];

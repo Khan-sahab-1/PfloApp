@@ -387,6 +387,7 @@ import { showFlashMessage } from '../../utils/fleshmessage';
 import HeaderCompo from '../../components/HeaderCompo';
 import EditMeetingModal from '../../constaints/EditMeetingModal';
 import CreatemeetingModal from '../../constaints/CreatemeetingModal';
+import { COLORS } from '../../styles/Colors';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -395,7 +396,7 @@ dayjs.extend(timezone);
 
 const IST_OFFSET_HOURS = 5;
 const IST_OFFSET_MINUTES = 30;
-const ACCENT = '#007AFF';
+const ACCENT = COLORS.BUTTON || '#007AFF';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const THEME = {

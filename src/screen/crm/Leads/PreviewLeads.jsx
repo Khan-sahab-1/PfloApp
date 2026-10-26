@@ -333,39 +333,115 @@ const PreviewLeads = ({navigation, route}) => {
     return flatArray;
   };
 
+  // const sendForReview = async item => {
+  //   console.log(item,'Item data') 
+  //   try {
+  //     if (!item?.opportunity) {
+  //       Alert.alert('Alert', 'Please select Opportunity First');
+  //       return;
+  //     }
+  //     const opportunityId = item.id;
+  //     console.log(opportunityId, 'rrrrrrr');
+  //     const res = await makeApiCall(
+  //       server_origin,
+  //       urls.sent_for_review,
+  //       'POST',
+  //       {
+  //         jsonrpc: '2.0',
+  //         method: 'call',
+  //         params: {id: opportunityId,opportunity_id: item.opportunity?item.opportunity:null},
+  //       },
+  //     );
+
+  //     console.log(res);
+
+  //     if (res?.result?.success) {
+  //       Alert.alert('Success', res.result.message, [
+  //         {text: 'OK', onPress: () => navigation.pop(1)},
+  //       ]);
+  //     } else {
+  //       Alert.alert('Error', res?.result?.message || 'Failed');
+  //     }
+  //   } catch (e) {
+  //     console.error('sendForReview:', e);
+  //   }
+  // };
+
+
   const sendForReview = async item => {
-    console.log(item,'Item data') 
-    try {
-      if (!item?.opportunity) {
-        Alert.alert('Alert', 'Please select Opportunity First');
-        return;
-      }
-      const opportunityId = item.id;
-      console.log(opportunityId, 'rrrrrrr');
-      const res = await makeApiCall(
-        server_origin,
-        urls.sent_for_review,
-        'POST',
-        {
-          jsonrpc: '2.0',
-          method: 'call',
-          params: {id: opportunityId},
+  console.log(item, 'Item data');
+
+  try {
+    const opportunityId = item.id;
+
+    console.log(opportunityId, 'rrrrrrr');
+
+    const res = await makeApiCall(
+      server_origin,
+      urls.sent_for_review,
+      'POST',
+      {
+        jsonrpc: '2.0',
+        method: 'call',
+        params: {
+          id: opportunityId,
+          opportunity_id: item.opportunity ? item.opportunity : null,
         },
-      );
+      },
+    );
 
-      console.log(res);
+    console.log(res);
 
-      if (res?.result?.success) {
-        Alert.alert('Success', res.result.message, [
-          {text: 'OK', onPress: () => navigation.pop(1)},
-        ]);
-      } else {
-        Alert.alert('Error', res?.result?.message || 'Failed');
-      }
-    } catch (e) {
-      console.error('sendForReview:', e);
+    if (res?.result?.success) {
+      Alert.alert('Success', res.result.message, [
+        {
+          text: 'OK',
+          onPress: () => navigation.pop(1),
+        },
+      ]);
+    } else {
+      Alert.alert('Error', res?.result?.message || 'Failed');
     }
-  };
+  } catch (e) {
+    console.error('sendForReview:', e);
+  }
+};
+
+
+const handlesentforreview = item => {
+  if (!item?.opportunity) {
+    Alert.alert(
+      'Opportunity Required',
+      'No Opportunity is selected. Do you want to continue?',
+      [
+        {
+          text: 'Yes',
+          onPress: () => {
+            // Yes = stop
+            sendForReview(item);
+          },
+        },
+        {
+          text: 'No' ,
+          onPress: () => {
+            // No = continue
+            
+             return;
+          },
+        },
+      ],
+      {
+        cancelable: false,
+      },
+    );
+
+    return;
+  }
+
+  // Opportunity selected hai
+  sendForReview(item);
+};
+  
   
        const fetchAttachments = async () => {
           try {
@@ -478,7 +554,7 @@ useEffect(() => {
               <ButtonCompo
                 title="sent for review"
                 onPress={() => {
-                  sendForReview(item);
+                  handlesentforreview(item);
                 }}
               />
             )}

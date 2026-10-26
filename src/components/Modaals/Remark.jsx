@@ -86,7 +86,7 @@ const Remark = ({isVisible, onclose, resUser}) => {
       visible={isVisible}
       animationType="slide"
       transparent
-      onRequestClose={onclose}>
+      onRequestClose={() => onclose && onclose()}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Add Remark</Text>
@@ -145,7 +145,7 @@ const Remark = ({isVisible, onclose, resUser}) => {
           />
 
           <View style={styles.btnRow}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onclose}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => onclose && onclose()}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
 

@@ -1,254 +1,6 @@
-// import { View, Text, Button, Alert, StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
-// import React, { useState, useEffect, useContext } from 'react';
-// import { useNavigation } from '@react-navigation/native';
-// import urls from '../../url';
-// import { AuthContext } from './Context';
-// import axios from 'axios';
-// import ImageResizer from 'react-native-image-resizer';
-// import { COLORS } from '../styles/Colors';
-// import navigationString from '../route/navigationString';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import HeaderCompo from '../components/HeaderCompo';
-// // Jamshed start 
-// const Maps = ({ route }) => {
-//   const [response, setResponse] = useState(null);
-//   const [loading, setLoading] = useState(false);
-//   const [times, setCurrentTime] = useState(null);
-//   const [latitude, setLatitude] = useState(route.params.latitude);
-//   const [longitude, setLongitude] = useState(route.params.longitude);
-//   const [picture, setPicture] = useState(route.params.picture);
-//   const [responseData, setResponseData] = useState(null);
-//   const [clickCount, setClickCount] = useState(0);
- 
-//   const contextType = useContext(AuthContext);
-//   const server_origin = contextType.currentUrl;
-//   const getAttendanceData = server_origin + urls.getAttendance;
-//   const getAttendanceData2 = server_origin + urls.getAttendance2;
-//   console.log("------Maps-----", server_origin, getAttendanceData);
-//   const colorScheme = useColorScheme();
-//       const isDarkMode = colorScheme === 'dark';
- 
-//   const navigation = useNavigation();
-//   console.log("Latitude:", latitude);
-//   console.log("Longitude:", longitude);
- 
-//  const showAlert = (message) => {
-//   Alert.alert(
-//     "Attendance Marked",
-//     message,
-//     [
-//       {
-//         text: "OK",
-//         onPress: () => navigation.navigate('Tabroutes'), 
-//         style: "default",
-//       },
-//     ],
-//     { cancelable: false }
-//   );
-// };
-
- 
-//   const compressImgae = () => {
-//     setLoading(true);
-//     ImageResizer.createResizedImage(picture.uri, picture.width, picture.height, 'JPEG', 5)
-//       .then(resizedImage => {
-//         const newImage = { ...resizedImage, type: picture.type, fileName: picture.fileName };
-//         handleAttendancePress(newImage)
-//       })
-//       .catch(err => {
-//         console.log('Image Resizer Error: ', err);
-//         handleAttendancePress(picture)
- 
-//       });
-//   };
- 
-//   const handleAttendancePress = async (pic) => {
-//     setLoading(true);
-  
-//     try {
-//       if (clickCount === 1) {
-//         // navigation.navigate('Tabroutes');
-//         // return;
-//       }
-  
-//       const now = new Date();
-//       const isoTimeString = now.toISOString();
-//       const formattedTime = formatToCustomDateTime(now);
-  
-//       const data = new FormData();
-//       data.append('file', {
-//         uri: pic.uri,
-//         name: pic.fileName,
-//         type: pic.type,
-//       });
-  
-//       const details = {
-//         latitude,
-//         longitude,
-//         times: isoTimeString,
-//       };
-//       data.append('details', JSON.stringify(details));
-  
-//       const response = await axios.post(getAttendanceData2, data, {
-//         headers: {
-//           'Accept': 'application/json',
-//           'Content-Type': 'multipart/form-data',
-//         },
-//       });
-  
-//       const responseData = response.data;
-//       console.log("*************", responseData);
-//       console.log(responseData.punch_time);
-  
-//       // ✅ Store punch time in AsyncStorage
-//       if (responseData?.punch_time) {
-//         await AsyncStorage.setItem('punch_time', String(responseData.punch_time));
-//       }
-  
-//       setResponse(responseData);
-  
-//       if (responseData.attendance_marked) {
-//         showAlert(responseData.message);
-//         setClickCount(clickCount + 1);
-//       } else {
-//         showAlert('Attendance marked Failed!');
-//       }
-//     } catch (error) {
-//       console.error('Error marking attendance:', error);
-//       showAlert('Error marking attendance.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-  
- 
-//   useEffect(() => {
-//     return () => setClickCount(0);
-//   }, []);
- 
-//   const formatToIndianDateTime = (dateString) => {
-//     const options = {
-//       timeZone: 'Asia/Kolkata',
-//       hour12: false,
-//       year: 'numeric',
-//       month: 'numeric',
-//       day: 'numeric',
-//       hour: 'numeric',
-//       minute: 'numeric',
-//       second: 'numeric',
-//     };
-//     return new Date(dateString).toLocaleTimeString('en-IN', options);
-//   };
-//   const formatToCustomDateTime = (date) => {
-//     const pad = (n) => n.toString().padStart(2, '0');
- 
-//     const year = date.getFullYear();
-//     const month = pad(date.getMonth() + 1);
-//     const day = pad(date.getDate());
-//     const hours = pad(date.getHours());
-//     const minutes = pad(date.getMinutes());
-//     const seconds = pad(date.getSeconds());
- 
-//     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-//   };
- 
- 
-//   return (
-//     <>
-//     <HeaderCompo title="Mark Attendance" lefticon={require('../assets/back.png')}
-//     onPress={()=>navigation.goBack()} />
-// <View style={{...styles.container, backgroundColor: isDarkMode ? COLORS.black : COLORS.BACKGROUND}}>
-// <View style={styles.row}>
-// <View style={styles.column}>
-// <Text style={styles.label}>Latitude:</Text>
-// <Text style={styles.value}>{latitude}</Text>
-// </View>
-// <View style={styles.column}>
-// <Text style={styles.label}>Longitude:</Text>
-// <Text style={styles.value}>{longitude}</Text>
-// </View>
-// </View>
-//       {response && (
-// <View style={styles.row}>
-// <View style={styles.column}>
-// <Text style={styles.label}>Employee Location:</Text>
-// <Text style={styles.value}>{response?.emp_address}</Text>
-// </View>
-// <View style={styles.column}>
-// <Text style={styles.label}>Punch Date & Time :</Text>
-// <Text style={styles.value}>
-//               {formatToIndianDateTime(response?.punch_time)}
-// </Text>
-// </View>
-// </View>
-//       )}
-// <TouchableOpacity
-//         style={[styles.button, loading && styles.buttonDisabled]}
-//         // onPress={handleAttendancePress}
-//         onPress={compressImgae}
-//         disabled={loading}
-// >
-// <Text style={styles.buttonText}>Mark Attendance</Text>
-// </TouchableOpacity>
-//       {loading && <ActivityIndicator size="large" color="blue" />}
-// </View>
-//     </>
-//   );
-// };
- 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: 20,
-//     justifyContent: 'flex-start',
-//     backgroundColor: COLORS.BACKGROUND,
-//   },
-//   row: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginVertical: 12,
-//     padding: 12,
-//     backgroundColor: '#f0f4ff',
-//     borderRadius: 10,
-//     elevation: 2,
-//   },
-//   column: {
-//     flex: 1,
-//     marginHorizontal: 5,
-//   },
-//   label: {
-//     fontWeight: '600',
-//     fontSize: 14,
-//     marginBottom: 4,
-//     color: COLORS.primary || '#003366',
-//   },
-//   value: {
-//     fontSize: 14,
-//     color: COLORS.text || '#000',
-//   },
-//   button: {
-//     backgroundColor: COLORS.primary || '#003366',
-//     paddingVertical: 14,
-//     paddingHorizontal: 24,
-//     borderRadius: 8,
-//     alignItems: 'center',
-//     marginTop: 20,
-//   },
-//   buttonDisabled: {
-//     backgroundColor: '#cccccc',
-//   },
-//   buttonText: {
-//     color: 'white',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-// });
-
- 
-// export default Maps;
-// // Jamshed start 
-
-
+import {validAttendanceCoordinates} from '../utils/attendanceLocation';
+import {requireAttendanceAccess} from '../offline/session';
+import {saveOfflineAttendance} from '../offline/queue';
 import {
   View,
   Text,
@@ -403,7 +155,7 @@ const Maps = ({ route }) => {
   // Theme tokens
   const bg = isDarkMode ? '#08080F' : '#F4F6FA';
   const cardBg = isDarkMode ? '#111118' : '#FFFFFF';
-  const accent = '#4F6EF7';
+  const accent = COLORS.BUTTON || '#4F46E5'; // Indigo-600
   const accentGreen = '#22C55E';
   const textPrimary = isDarkMode ? '#F0F0FF' : '#0D0D1A';
   const textSub = isDarkMode ? '#5A5A72' : '#9090A8';
@@ -464,7 +216,7 @@ const Maps = ({ route }) => {
           ? 'Checked In'
           : 'Checked Out'
         : 'Attendance Error',
-      message,
+      typeof message === 'string' ? message : 'Attendance could not be completed. Please try again.',
       [
         {
           text: 'OK',
@@ -509,12 +261,27 @@ const Maps = ({ route }) => {
   const handleAttendancePress = async (pic) => {
     setLoading(true);
     try {
+      if (!validAttendanceCoordinates({latitude, longitude})) {
+        throw new Error('Valid location is missing. Please take the selfie and location again.');
+      }
       if (!pic?.uri) {
         throw new Error('Attendance image is missing. Please take the selfie again.');
       }
 
       if (clickCount === 1) { }
 
+      const mode = await requireAttendanceAccess(server_origin, userinfo?.emp_code);
+      if (mode === 'offline') {
+        await saveOfflineAttendance({
+          server: server_origin, employeeCode: userinfo?.emp_code,
+          action: attendanceAction, latitude, longitude, picture: pic,
+        });
+        setUiStatus('success');
+        Alert.alert('Attendance saved', 'Attendance will sync automatically when internet is available.', [{
+          text: 'OK', onPress: () => navigation.reset({index: 0, routes: [{name: 'OfflineDashboard'}]}),
+        }], {cancelable: false});
+        return;
+      }
       const now = new Date();
       const isoTimeString = now.toISOString();
       const formattedTime = formatToCustomDateTime(now);
@@ -529,6 +296,7 @@ const Maps = ({ route }) => {
       data.append('details', JSON.stringify(details));
 
       const response = await axios.post(getAttendanceData2, data, {
+        withCredentials: true,
         headers: { 'Accept': 'application/json', 'Content-Type': 'multipart/form-data' },
       });
 
@@ -603,7 +371,7 @@ const Maps = ({ route }) => {
 
   return (
     <>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={bg} />
+      {/* <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={bg} /> */}
       <HeaderCompo
         title="Mark Attendance"
         lefticon={require('../assets/back.png')}
@@ -776,7 +544,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     overflow: 'hidden',
     elevation: 12,
-    shadowColor: '#4F6EF7',
+    shadowColor: COLORS.BLUE || '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -785,6 +553,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -40, right: -40,
     width: 160, height: 160, borderRadius: 80,
     backgroundColor: 'rgba(255,255,255,0.08)',
+    
   },
   heroCircle2: {
     position: 'absolute', bottom: -30, left: -20,
@@ -793,6 +562,7 @@ const styles = StyleSheet.create({
   },
   heroTop: {
     flexDirection: 'row', justifyContent: 'space-between',
+    
     alignItems: 'flex-start', marginBottom: 16,
   },
   heroGreeting: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
@@ -873,7 +643,7 @@ const styles = StyleSheet.create({
 
   // Button
   markBtn: {
-    backgroundColor: '#4F6EF7',
+    backgroundColor: COLORS.BUTTON || '#4F6EF7',
     height: 60, borderRadius: 16,
     justifyContent: 'center', alignItems: 'center',
     elevation: 8,

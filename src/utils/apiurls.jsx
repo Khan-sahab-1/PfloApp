@@ -6,13 +6,13 @@
 //  export const  BASE_URL= "http://192.168.10.84:8085";
 // export const BASE_URL = 'http://172.24.43.221:8085';
 // export const BASE_URL = 'http://192.168.31.93:8085';
-export const BASE_URL = 'http://192.168.1.6:8070';
+// export const BASE_URL = 'http://192.168.1.6:8070';
 // export  const  BASE_URL= "https://arkefilters.pflo.co.in";
 // export const BASE_URL = 'http://10.23.1.236:8085';
 
 // export const BASE_URL = 'https://preqa1.arkess.com';
 // export const BASE_URL = 'https://preqa2.arkess.com';
-// export const BASE_URL = 'https://arkefilters.pflo.co.in';
+export const BASE_URL = 'https://arkefilters.pflo.co.in';
 
 const domain = BASE_URL;
 
@@ -41,7 +41,7 @@ const API = {
   odooAutoMarkAttendance: domain + '/auto_mark_attendance',
 
 
-  getLeadsData: domain + '/leads/data',
+  getLeadsData: domain + '/leads/data/v1',
   createLead: domain + '/create/leads',
   editLead: domain + '/edit/leads',
   fetchleadsDivision: domain + '/leads/division',

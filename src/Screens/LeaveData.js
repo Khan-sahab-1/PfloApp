@@ -626,6 +626,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import urls from '../../url';
 import { AuthContext } from './Context';
 import HeaderCompo from '../components/HeaderCompo';
+import { COLORS } from '../styles/Colors';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -712,7 +713,7 @@ const LeaveCard = ({ item, isDarkMode, activeTabKey, onCancel, cancelLoading }) 
       >
         {/* Card Header */}
         <View style={cardS.header}>
-          <View style={[cardS.avatar, { backgroundColor: isEditable ? '#2563EB' : '#9CA3AF' }]}>
+          <View style={[cardS.avatar, { backgroundColor: isEditable ? COLORS.BUTTON : '#9CA3AF' }]}>
             <Text style={cardS.avatarText}>
               {(item.employee_name || '?')[0].toUpperCase()}
             </Text>
@@ -1030,7 +1031,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F2F8', gap: 4,
   },
   tabDark:   { backgroundColor: '#161B28' },
-  tabActive: { backgroundColor: '#2563EB' },
+  tabActive: { backgroundColor: COLORS.BUTTON },
 
   tabIcon:  { fontSize: 13 },
   tabLabel: { fontSize: 12, fontWeight: '700', color: '#6B7280' },

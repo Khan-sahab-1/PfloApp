@@ -1947,7 +1947,7 @@ const EditOpportunity = ({route, navigation}) => {
 
   return (
     <View style={{flex: 1, backgroundColor: bg}}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={bg} />
+      {/* <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={bg} /> */}
 
       <HeaderCompo
         title="Edit Opportunity"

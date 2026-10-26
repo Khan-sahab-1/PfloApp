@@ -39,3 +39,14 @@ describe('authenticateUser', () => {
     ).resolves.toBe(false);
   });
 });
+
+test('returns the employee permission when the caller requests the login result', async () => {
+  const result = {success: true, message: 'Login successful', employee_name: {id: 144, offline_attendance: true}};
+  global.fetch = jest.fn().mockResolvedValue({ok: true, json: async () => ({result})});
+  await expect(authenticateUser('IT201', 'pin', 'https://example.com', true)).resolves.toEqual(result);
+});
+
+test('explicit backend denial cannot grant login despite a success message', async () => {
+  global.fetch = jest.fn().mockResolvedValue({ok: true, json: async () => ({result: {success: false, message: 'Login successful'}})});
+  await expect(authenticateUser('IT201', 'pin', 'https://example.com', true)).resolves.toBe(false);
+});

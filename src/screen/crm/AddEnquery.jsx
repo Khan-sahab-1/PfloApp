@@ -912,6 +912,7 @@ const AddEnquery = ({route, navigation}) => {
         method: 'call',
         params,
       });
+      console.log(res?.result,'res?.result')
       if (res?.result?.success === true) {
         Alert.alert(
           'Success',

@@ -896,7 +896,7 @@ const darkTheme = {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const ACCENT = '#4F46E5'; // Indigo-600
+const ACCENT = COLORS.BUTTON || '#4F46E5'; // Indigo-600
 
 const styles = StyleSheet.create({
   backdrop: {

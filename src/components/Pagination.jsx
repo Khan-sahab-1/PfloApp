@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import { COLORS } from '../styles/Colors';
 
 const Pagination = ({pagination = {}, loading, onNext, onPrev}) => {
   const {
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   btn: {
-    backgroundColor: '#007BFF',
+    backgroundColor: COLORS.BLUE || '#007AFF',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,

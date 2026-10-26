@@ -38,6 +38,10 @@
 	<string>Pflo adds your meetings and reminders to your device calendar.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Pflo needs calendar access to create and update your meeting reminders.</string>
+	<key>UIBackgroundModes</key>
+	<array><string>fetch</string></array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array><string>com.transistorsoft.fetch</string></array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

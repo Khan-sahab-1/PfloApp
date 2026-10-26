@@ -1,221 +1,3 @@
-// import {
-//   View,
-//   Text,
-//   StatusBar,
-//   TouchableOpacity,
-//   PermissionsAndroid,
-//   Image,
-//   Alert,
-//   useColorScheme,
-// } from 'react-native';
-// import React, { useState } from 'react';
-// import { launchCamera } from 'react-native-image-picker';
-// import Geolocation from 'react-native-geolocation-service';
-// import HeaderCompo from '../components/HeaderCompo';
-// import { COLORS } from '../styles/Colors';
-// import Loader from '../components/Loader';
-// import { showFlashMessage } from '../utils/fleshmessage';
-
-// const Selfie = ({ navigation }) => {
-//     const colorScheme = useColorScheme();
-//     const isDarkMode = colorScheme === 'dark';
-//   const [picture, setpicture] = useState(
-//     'https://previews.123rf.com/images/aguiters/aguiters1508/aguiters150800059/43551287-photo-camera-icon.jpg',
-//   );
-//   const [images, setimages] = useState(
-//     'https://previews.123rf.com/images/aguiters/aguiters1508/aguiters150800059/43551287-photo-camera-icon.jpg',
-//   );
-//   const [toggle, settoggle] = useState(true);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const requestCameraPermission = async () => {
-//     try {
-//       const granted = await PermissionsAndroid.request(
-//         PermissionsAndroid.PERMISSIONS.CAMERA,
-//         {
-//           title: 'Cool Photo App Camera Permission',
-//           message:
-//             'Cool Photo App needs access to your camera ' +
-//             'so you can take awesome pictures.',
-//           buttonNeutral: 'Ask Me Later',
-//           buttonNegative: 'Cancel',
-//           buttonPositive: 'OK',
-//         },
-//       );
-//       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-//         setIsLoading(true);
-//         const result = await launchCamera({
-//           mediaType: 'photo',
-//           cameraType: 'font',
-//           // includeBase64: true,
-//           quality: 0.3,
-//         });
-//          setIsLoading(false); 
-//         console.log('==========',result,'==========')
-//         setpicture(result?.assets[0]);
-//         setimages(result?.assets[0]?.uri);
-//         settoggle(false);
-//       } else {
-//         console.log('Camera permission denied');
-//         Alert.alert('Camera permission denied');
-//         setIsLoading(false);
-//       }
-//     } catch (err) {
-//       console.warn(err);
-//     }
-//   };
-
-//   const checkPermissionGPS = async () => {
-//     // Alert.alert("check +++++")
-//     try {
-//       const granted = await PermissionsAndroid.request(
-//         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-//         {
-//           title: 'Cool Photo App Gps Permission',
-//           message:
-//             'Cool Photo App needs access to your Gps ' +
-//             'so you can take awesome pictures.',
-//           buttonNeutral: 'Ask Me Later',
-//           buttonNegative: 'Cancel',
-//           buttonPositive: 'OK',
-//         },
-//       );
-//       console.log("================", granted)
-//       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-//         getCurrentLocation();
-//       } else {
-//         console.log('Camera permission denied');
-//         // Alert.alert('GPS permission denied');
-//         showFlashMessage({
-//           message: 'GPS permission denied',
-//           description: 'Please enable GPS permission to continue',
-//           type: 'danger',
-//           backgroundColor: COLORS.RED,
-//         });
-//       }
-//     } catch (err) {
-//       Alert.alert(err);
-//     }
-//   };
-
-//   // const getCurrentLocation = async () => {
-//   //   console.log("getting dataaaaa",picture)
-//   //   setIsLoading(true);
-//   //   Geolocation.getCurrentPosition(
-//   //     position => {
-//   //        setIsLoading(false);
-//   //       if (position) {
-//   //         console.log("----------",position)
-//   //         navigation.navigate('Maps', {
-//   //           latitude: position.coords.latitude,
-//   //           longitude: position.coords.longitude,
-//   //           picture,
-//   //         });
-//   //       }
-//   //     },
-//   //     error => {
-//   //       const { code, message } = error;
-//   //       console.warn(code, message);
-//   //       setIsLoading(false);
-//   //     },
-//   //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-//   //   );
-//   // };
-
-//   const getCurrentLocation = async () => {
-//   console.log("getting dataaaaa", picture);
-//   setIsLoading(true);
-
-//   Geolocation.getCurrentPosition(
-//     position => {
-//       setIsLoading(false);
-
-//       // ✅ Fake Location Detection (Android Only)
-//       if (Platform.OS === 'android' && position?.mocked) {
-//         Alert.alert(
-//           "Fake Location Detected",
-//           "Please disable mock location and try again."
-//         );
-//         return;
-//       }
-
-//       if (position) {
-//         console.log("----------", position);
-
-//         navigation.navigate('Maps', {
-//           latitude: position.coords.latitude,
-//           longitude: position.coords.longitude,
-//           picture,
-//         });
-//       }
-//     },
-//     error => {
-//       const { code, message } = error;
-//       console.warn(code, message);
-//       setIsLoading(false);
-
-//       showFlashMessage({
-//         message: 'Location Error',
-//         description: message,
-//         type: 'danger',
-//         backgroundColor: COLORS.RED,
-//       });
-//     },
-//     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-//   );
-// };
-//   return (
-//     <>
-//     <HeaderCompo title={'Take Your Picture'}/>
-//     <View style={{ flex: 1, backgroundColor: isDarkMode?COLORS.black:COLORS.BACKGROUND, paddingHorizontal: 20 }}>
-//       <View style={{ flex: 1, paddingVertical: 10 }}>
-//         <TouchableOpacity
-//           onPress={() => {
-//             requestCameraPermission();
-//           }}
-//           activeOpacity={0.8}
-//           style={{
-//             backgroundColor: '#F3F3F3',
-//             flex: 0.7,
-//             justifyContent: 'center',
-//           }}>
-//           <Image
-//             style={{ flex: 1, resizeMode: 'contain' }}
-//             source={{ uri: picture,uri: images }}
-//           />
-//         </TouchableOpacity>
-
-//         <TouchableOpacity
-//           disabled={toggle}
-//           onPress={() => {
-//             checkPermissionGPS();
-//           }}
-//           activeOpacity={0.8}
-//           style={{
-//             backgroundColor: toggle ? 'gray' : 'blue',
-//             height: 60,
-//             borderRadius: 5,
-//             justifyContent: 'center',
-//             alignItems: 'center',
-//           }}>
-//           <Text
-//             style={{
-//               fontSize: 20,
-//               textAlign: 'left',
-//               color: 'white',
-//               fontWeight: 'bold',
-//             }}>
-//             CONTINUE
-//           </Text>
-//         </TouchableOpacity>
-//       </View>
-//       <Loader visible={isLoading} />
-//     </View>
-//     </>
-//   );
-// };
-
-// export default Selfie;
-
 import {
   View,
   Text,
@@ -233,6 +15,7 @@ import {
 import React, { useState, useRef, useEffect } from 'react';
 import { launchCamera } from 'react-native-image-picker';
 import Geolocation from 'react-native-geolocation-service';
+import {getAttendanceLocation} from '../utils/attendanceLocation';
 import HeaderCompo from '../components/HeaderCompo';
 import { COLORS } from '../styles/Colors';
 import Loader from '../components/Loader';
@@ -253,6 +36,23 @@ const Selfie = ({navigation, route}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(false);
   const isCameraOpeningRef = useRef(false);
+  const locationRequestRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    const unsubscribe = navigation.addListener('blur', () => {
+      locationRequestRef.current?.abort();
+      locationRequestRef.current = null;
+      if (mountedRef.current) { setIsLoading(false); }
+    });
+    return () => {
+      mountedRef.current = false;
+      locationRequestRef.current?.abort();
+      locationRequestRef.current = null;
+      unsubscribe();
+    };
+  }, [navigation]);
 
   // Animations
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -262,39 +62,43 @@ const Selfie = ({navigation, route}) => {
 
   useEffect(() => {
     // Entrance animation
-    Animated.parallel([
+    const entrance = Animated.parallel([
       Animated.timing(fadeIn, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(slideUp, { toValue: 0, duration: 700, useNativeDriver: true }),
-    ]).start();
+    ]);
+    entrance.start();
 
     // Shimmer loop on placeholder
-    Animated.loop(
+    const shimmer = Animated.loop(
       Animated.sequence([
         Animated.timing(shimmerAnim, { toValue: 1, duration: 1400, useNativeDriver: true }),
         Animated.timing(shimmerAnim, { toValue: 0, duration: 1400, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    shimmer.start();
 
     // Pulse loop on camera icon area
-    Animated.loop(
+    const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.06, duration: 900, useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    pulse.start();
+    return () => { entrance.stop(); shimmer.stop(); pulse.stop(); };
   }, []);
 
   const shimmerOpacity = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.9] });
 
-  // ─── LOGIC (UNCHANGED) ───────────────────────────────────────────
+  // Camera and attendance location
   const requestCameraPermission = async () => {
-    if (isCameraOpeningRef.current) {
+    if (isCameraOpeningRef.current || locationRequestRef.current) {
       return;
     }
 
     isCameraOpeningRef.current = true;
     try {
-      const granted = await PermissionsAndroid.request(
+      const granted = Platform.OS === 'android' ? await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
           title: 'Cool Photo App Camera Permission',
@@ -305,17 +109,21 @@ const Selfie = ({navigation, route}) => {
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
         },
-      );
+      ) : PermissionsAndroid.RESULTS.GRANTED;
+      if (!mountedRef.current || !navigation.isFocused()) { return; }
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         setIsLoading(true);
         const result = await launchCamera({
           mediaType: 'photo',
           cameraType: 'front',
           quality: 0.3,
+          maxWidth: 1280,
+          maxHeight: 1280,
           saveToPhotos: false,
           includeBase64: false,
         });
 
+        if (!mountedRef.current || !navigation.isFocused()) { return; }
         if (result?.didCancel) {
           return;
         }
@@ -352,79 +160,54 @@ const Selfie = ({navigation, route}) => {
       }
     } catch (err) {
       console.warn('Attendance camera error:', err);
-      Alert.alert('Camera Error', 'Camera open nahi ho saka. Please try again.');
+      if (mountedRef.current && navigation.isFocused()) {
+        Alert.alert('Camera Error', 'Camera open nahi ho saka. Please try again.');
+      }
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) { setIsLoading(false); }
       isCameraOpeningRef.current = false;
     }
   };
 
   const checkPermissionGPS = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Cool Photo App Gps Permission',
-          message:
-            'Cool Photo App needs access to your Gps ' +
-            'so you can take awesome pictures.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
-      console.log('================', granted);
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        getCurrentLocation();
-      } else {
-        console.log('Camera permission denied');
-        showFlashMessage({
-          message: 'GPS permission denied',
-          description: 'Please enable GPS permission to continue',
-          type: 'danger',
-          backgroundColor: COLORS.RED,
-        });
-      }
-    } catch (err) {
-      Alert.alert(err);
-    }
-  };
-
-  const getCurrentLocation = async () => {
-    console.log('getting dataaaaa', picture);
+    if (locationRequestRef.current || isCameraOpeningRef.current || !picture?.uri) { return; }
+    const request = new AbortController();
+    locationRequestRef.current = request;
     setIsLoading(true);
-    Geolocation.getCurrentPosition(
-      position => {
-        setIsLoading(false);
-        if (Platform.OS === 'android' && position?.mocked) {
-          Alert.alert('Fake Location Detected', 'Please disable mock location and try again.');
-          return;
+    try {
+      if (Platform.OS === 'android') {
+        const permissions = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        ]);
+        if (request.signal.aborted) { return; }
+        if (permissions[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] !== PermissionsAndroid.RESULTS.GRANTED) {
+          throw new Error('Please allow precise location permission to mark attendance.');
         }
-        if (position) {
-          console.log('----------', position);
-          navigation.navigate('Maps', {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            picture,
-            attendanceAction:
-              route?.params?.attendanceAction || 'CHECK_IN',
-            userinfo: route?.params?.userinfo,
-          });
-        }
-      },
-      error => {
-        const { code, message } = error;
-        console.warn(code, message);
-        setIsLoading(false);
-        showFlashMessage({
-          message: 'Location Error',
-          description: message,
-          type: 'danger',
-          backgroundColor: COLORS.RED,
-        });
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 ,forceRequestLocation: true, showLocationDialog: true},
-    );
+      } else {
+        const status = await Geolocation.requestAuthorization('whenInUse');
+        if (status !== 'granted') { throw new Error('Please allow location permission to mark attendance.'); }
+      }
+      if (request.signal.aborted || !mountedRef.current || !navigation.isFocused()) { return; }
+      const {latitude, longitude} = await getAttendanceLocation({signal: request.signal});
+      if (request.signal.aborted || !mountedRef.current || !navigation.isFocused()) { return; }
+      // Hide the loader before leaving; the blur listener cancels this request.
+      setIsLoading(false);
+      navigation.navigate('Maps', {
+        latitude, longitude, picture,
+        attendanceAction: route?.params?.attendanceAction || 'CHECK_IN',
+        userinfo: route?.params?.userinfo,
+      });
+    } catch (error) {
+      if (!request.signal.aborted && mountedRef.current && navigation.isFocused()) {
+        Alert.alert('Location Error', typeof error?.message === 'string' ? error.message : 'Unable to get location. Please try again.');
+      }
+    } finally {
+      if (locationRequestRef.current === request) {
+        locationRequestRef.current = null;
+        if (mountedRef.current) { setIsLoading(false); }
+      }
+    }
   };
   // ─────────────────────────────────────────────────────────────────
 
@@ -438,10 +221,10 @@ const Selfie = ({navigation, route}) => {
 
   return (
     <>
-      <StatusBar
+      {/* <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={bg}
-      />
+      /> */}
       <HeaderCompo title={'Take Your Picture'} />
 
       <View style={[styles.root, { backgroundColor: bg }]}>
@@ -510,7 +293,7 @@ const Selfie = ({navigation, route}) => {
 
           {/* ── CONTINUE BUTTON ── */}
           <TouchableOpacity
-            disabled={toggle}
+            disabled={toggle || isLoading}
             onPress={checkPermissionGPS}
             activeOpacity={0.85}
             style={[

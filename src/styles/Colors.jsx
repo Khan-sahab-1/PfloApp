@@ -5,7 +5,7 @@ export const COLORS = {
   black: '#111111',
   white: '#ffffff',
   // BLUE: '#003e79',
-  BLUE:'#071B35',
+  BLUE:'#183C31',
   GRAY: '#E8E8E8',
   BACKGROUND: '#f2f2f2',
   ISDARK: '#222',
@@ -15,7 +15,8 @@ export const COLORS = {
   LIGHT_BLUE: "#f1f8f8",
  LIGHT_PINK: "#f5e9e9",
  PURPLE: "#F3E8FF",
- LIGHT_ORANGE: "#FFF2E8"
+ LIGHT_ORANGE: "#FFF2E8",
+ BUTTON:'#26704E'
 
 };
 //Jamshed Ali Added End - Bug ID 2555

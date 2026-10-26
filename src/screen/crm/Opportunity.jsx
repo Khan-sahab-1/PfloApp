@@ -574,7 +574,7 @@ useEffect(() => {
           }>
           <Text
             style={{
-              fontSize: 18,
+              fontSize: 14,
               textAlign: 'center',
               fontWeight: '800',
               color: COLORS.white,
@@ -719,8 +719,8 @@ const styles = StyleSheet.create({
    bottom: 70,
     // left:0,
     right: 10,
-    height: 70,
-    width: 140,
+   height: 45,
+    width: 120,
     backgroundColor: COLORS.BLUE,
     borderRadius: 50,
     justifyContent: 'center',

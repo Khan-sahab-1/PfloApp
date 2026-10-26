@@ -8,7 +8,10 @@ import App from '../App';
 
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({children}: {children: React.ReactNode}) => children,
+  useNavigationContainerRef: () => require('react').useRef(null),
 }));
+
+jest.mock('../src/offline/ConnectionGuard', () => () => null);
 
 jest.mock('react-redux', () => ({
   Provider: ({children}: {children: React.ReactNode}) => children,
@@ -48,3 +51,5 @@ test('renders the Android application shell', async () => {
   expect(renderer!.root.findByProps({testID: 'routes'})).toBeTruthy();
   expect(renderer!.root.findByProps({testID: 'flash-message'})).toBeTruthy();
 });
+
+jest.mock('../src/offline/AutoSyncProvider', () => () => null);

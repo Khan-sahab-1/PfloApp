@@ -1,37 +1,29 @@
-// Routes.jsx
-// jamshed start bug id 2555
-// Description: This file defines the main routing structure for the application using React Navigation. It imports the authentication stack (AuthStack) and the main application stack (MainStack) and sets up the navigation container to manage the navigation flow between these stacks. The Routes component serves as the central point for defining how users navigate through the app, ensuring a seamless transition between authentication screens and the main application screens based on the user's authentication status.
-import { StyleSheet, Text, View } from 'react-native'
-import React, { useEffect } from 'react'
-import AuthStack from './AuthStack'
-import { NavigationContainer } from '@react-navigation/native'
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import MainStack from './MainStack'
-import { fetchUserData } from '../redux/reducers/Userinforeducers'
-import { useDispatch } from 'react-redux'
-const Stack=createNativeStackNavigator()
+import React, {useContext, useEffect, useState} from 'react';
+import {ActivityIndicator} from 'react-native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import MainStack from './MainStack';
+import {AuthContext} from '../Screens/Context';
+import {restoreStartup} from '../offline/startup';
 
-const Routes = () => {
+const Stack = createNativeStackNavigator();
 
-  const dispatch = useDispatch()
-  
-    // useEffect(() => {
-    //   dispatch(fetchUserData());
-    // }, []);
-  
-  return (
-    < >
- 
-
-    {MainStack(Stack)}     
-
-    </>
-
-
-  )
+export default function Routes() {
+  const {setCurrentUrl} = useContext(AuthContext);
+  const [initialRoute, setInitialRoute] = useState(null);
+  useEffect(() => {
+    let active = true;
+    // Resolve the saved employee before mounting any protected screen.
+    restoreStartup()
+      .then(account => {
+        if (active) {
+          if (account) { setCurrentUrl(account.server); }
+          setInitialRoute(account ? 'OfflineDashboard' : 'Login');
+        }
+      })
+      .catch(() => { if (active) { setInitialRoute('Login'); } });
+    return () => { active = false; };
+    // Server selection changes on Login; bootstrap runs only on app launch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return initialRoute ? MainStack(Stack, initialRoute) : <ActivityIndicator size="large" />;
 }
-
-export default Routes
-
-const styles = StyleSheet.create({})
-//bug id 2555 Jamshed end

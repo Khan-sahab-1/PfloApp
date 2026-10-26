@@ -1561,10 +1561,23 @@ const EditLeads = ({ route, navigation }) => {
   });
 
   // ── Generic API Helper ────────────────────────────────────────────────────────
-  const apiPost = useCallback(async (urlKey, params) =>
-    await makeApiCall(server_origin, urlKey, 'POST', {
-      jsonrpc: '2.0', method: 'call', params,
-    }), [server_origin]);
+  // const apiPost = useCallback(async (urlKey, params) =>
+  //   await makeApiCall(server_origin, urlKey, 'POST', {
+  //     jsonrpc: '2.0', method: 'call', params,
+  //   }), [server_origin]);
+  const apiPost = useCallback(
+  async (urlKey, params) => {
+    console.log('API URL:', urlKey);
+    console.log('API Params:', params);
+
+    return await makeApiCall(server_origin, urlKey, 'POST', {
+      jsonrpc: '2.0',
+      method: 'call',
+      params,
+    });
+  },
+  [server_origin]
+);
 
   // ── Fetchers ──────────────────────────────────────────────────────────────────
 
