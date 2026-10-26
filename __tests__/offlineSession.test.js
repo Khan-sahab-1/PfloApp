@@ -17,13 +17,22 @@ beforeEach(() => {
   saved = null;
   signedOut = null;
   lockSession();
+  const map = {};
   Storage.setItem.mockImplementation(async (key, value) => {
-    if (key === 'attendance:signed-out:v1') { signedOut = value; } else { saved = value; }
+    map[key] = value;
+    if (key === 'attendance:signed-out:v1') { signedOut = value; }
+    if (key === 'attendance:last-authorized-employee:v1') { saved = value; }
   });
   Storage.removeItem.mockImplementation(async key => {
-    if (key === 'attendance:signed-out:v1') { signedOut = null; } else { saved = null; }
+    delete map[key];
+    if (key === 'attendance:signed-out:v1') { signedOut = null; }
+    if (key === 'attendance:last-authorized-employee:v1') { saved = null; }
   });
-  Storage.getItem.mockImplementation(async key => key === 'attendance:signed-out:v1' ? signedOut : saved);
+  Storage.getItem.mockImplementation(async key => {
+    if (key === 'attendance:signed-out:v1') { return signedOut; }
+    if (key === 'attendance:last-authorized-employee:v1') { return saved; }
+    return map[key] || null;
+  });
   NetInfo.fetch.mockResolvedValue({isConnected: false});
 });
 

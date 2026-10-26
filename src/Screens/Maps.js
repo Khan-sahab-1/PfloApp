@@ -1,3 +1,4 @@
+import {cleanAttendanceImageCache} from '../utils/imageCleaner';
 import {validAttendanceCoordinates} from '../utils/attendanceLocation';
 import {requireAttendanceAccess} from '../offline/session';
 import {saveOfflineAttendance} from '../offline/queue';
@@ -38,17 +39,24 @@ const { width } = Dimensions.get('window');
 const pad = (n) => n.toString().padStart(2, '0');
 
 const formatToIndianDateTime = (dateString) => {
-  const options = {
-    timeZone: 'Asia/Kolkata',
-    hour12: false,
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  };
-  return new Date(dateString).toLocaleTimeString('en-IN', options);
+  if (!dateString) return '—';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '—';
+    const options = {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    };
+    return d.toLocaleTimeString('en-IN', options);
+  } catch (_) {
+    return '—';
+  }
 };
 
 const formatToCustomDateTime = (date) => {
@@ -230,7 +238,7 @@ const Maps = ({ route }) => {
     );
   };
 
-  const compressImgae = () => {
+  const compressImgae = async () => {
     setLoading(true);
     setUiStatus('loading');
     if (!picture?.uri) {
@@ -240,22 +248,31 @@ const Maps = ({ route }) => {
       return;
     }
 
-    const imageWidth = Number(picture.width) || 1080;
-    const imageHeight = Number(picture.height) || 1440;
+    try {
+      // Aggressive compression: 480x640 at 35% quality (produces ~20KB-30KB file)
+      // This saves massive storage space and ensures zero timeouts/OOM on poor networks
+      const resizedImage = await ImageResizer.createResizedImage(
+        picture.uri,
+        480,
+        640,
+        'JPEG',
+        35,
+        0,
+        null,
+        false,
+        { mode: 'contain', onlyScaleDown: true },
+      );
 
-    ImageResizer.createResizedImage(picture.uri, imageWidth, imageHeight, 'JPEG', 70)
-      .then(resizedImage => {
-        const newImage = {
-          ...resizedImage,
-          type: picture.type || 'image/jpeg',
-          fileName: picture.fileName || `attendance-${Date.now()}.jpg`,
-        };
-        handleAttendancePress(newImage);
-      })
-      .catch(err => {
-        console.log('Image Resizer Error: ', err);
-        handleAttendancePress(picture);
-      });
+      const newImage = {
+        ...resizedImage,
+        type: 'image/jpeg',
+        fileName: `attendance-${Date.now()}.jpg`,
+      };
+      await handleAttendancePress(newImage);
+    } catch (err) {
+      console.warn('Image Resizer Error (safe fallback to original picture):', err);
+      await handleAttendancePress(picture);
+    }
   };
 
   const handleAttendancePress = async (pic) => {
@@ -284,33 +301,39 @@ const Maps = ({ route }) => {
       }
       const now = new Date();
       const isoTimeString = now.toISOString();
-      const formattedTime = formatToCustomDateTime(now);
 
       const data = new FormData();
       data.append('file', {
         uri: pic.uri,
         name: pic.fileName || `attendance-${Date.now()}.jpg`,
-        type: pic.type || 'image/jpeg',
+        type: 'image/jpeg',
       });
       const details = { latitude, longitude, times: isoTimeString };
       data.append('details', JSON.stringify(details));
 
       const response = await axios.post(getAttendanceData2, data, {
         withCredentials: true,
+        timeout: 30000,
         headers: { 'Accept': 'application/json', 'Content-Type': 'multipart/form-data' },
       });
 
-      const responseData = response.data;
-      console.log('*************J____', responseData);
-      console.log(responseData.punch_time);
+      const rawData = response?.data;
+      let responseData = rawData;
+      if (typeof rawData === 'string') {
+        try {
+          responseData = JSON.parse(rawData);
+        } catch (_) {
+          responseData = { attendance_marked: false, message: 'Server returned unexpected response format.' };
+        }
+      }
 
-      setResponse(responseData);
+      console.log('************* Attendance Response:', responseData);
 
-      if (responseData.attendance_marked) {
+      if (responseData && typeof responseData === 'object' && responseData.attendance_marked) {
+        setResponse(responseData);
         if (attendanceAction === 'CHECK_IN') {
           const punchTime = responseData?.punch_time || now.toISOString();
           await setEmployeePunchTime(userinfo?.emp_code, punchTime);
-          console.log(userinfo?.live_tracking_enabled,'userinfo?.live_tracking_enabled--------->>>>>>>>')
 
           if (userinfo?.live_tracking_enabled) {
             try {
@@ -323,8 +346,6 @@ const Maps = ({ route }) => {
                 employeeCode: userinfo.emp_code,
               });
             } catch (trackingError) {
-              // Attendance is already marked, so a tracking failure must not
-              // turn a successful check-in into an attendance error.
               console.error('[PFLO Tracking] Start after attendance failed', {
                 message: trackingError?.message,
               });
@@ -346,18 +367,42 @@ const Maps = ({ route }) => {
         showAlert(responseData.message || 'Attendance marked successfully.', true);
       } else {
         setUiStatus('error');
-        showAlert(responseData?.message || 'Attendance marking failed.');
+        const errorMsg = (responseData && typeof responseData === 'object' && responseData.message)
+          ? (typeof responseData.message === 'string' ? responseData.message : JSON.stringify(responseData.message))
+          : 'Attendance marking failed. Please try again.';
+        showAlert(errorMsg, false);
       }
     } catch (error) {
       console.error('Error marking attendance:', error);
       setUiStatus('error');
-      showAlert(
-        error?.response?.data?.message ||
-          error?.message ||
-          'Error marking attendance.',
-      );
+
+      let userMsg = 'Attendance could not be completed. Please try again.';
+
+      if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+        userMsg = 'Request timed out. Please check your internet connection and try again.';
+      } else if (error?.response?.status >= 500) {
+        userMsg = 'Server is currently unreachable or experiencing high load. Please try again in a few moments.';
+      } else if (error?.response?.status === 413) {
+        userMsg = 'Image file too large for server. Please retake photo.';
+      } else if (error?.response?.data) {
+        const d = error.response.data;
+        if (typeof d === 'string') {
+          userMsg = d.length < 120 && !d.includes('<html') ? d : 'Server returned an error status.';
+        } else if (typeof d === 'object') {
+          userMsg = d.message || d.error?.message || d.error?.data?.message || userMsg;
+          if (typeof userMsg !== 'string') {
+            userMsg = JSON.stringify(userMsg);
+          }
+        }
+      } else if (error?.message) {
+        userMsg = String(error.message);
+      }
+
+      showAlert(userMsg, false);
     } finally {
       setLoading(false);
+      // Clean up temporary image files from cache to prevent storage bloat
+      cleanAttendanceImageCache();
     }
   };
 
@@ -439,7 +484,7 @@ const Maps = ({ route }) => {
           </View>
 
           {/* ── RESPONSE SECTION ── */}
-          {response && (
+          {Boolean(response?.attendance_marked) && (
             <>
               <Text style={[styles.sectionTitle, { color: textSub }]}>✅ Attendance Details</Text>
               <View style={styles.row}>

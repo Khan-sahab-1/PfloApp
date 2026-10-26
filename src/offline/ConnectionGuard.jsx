@@ -1,9 +1,9 @@
 import {useEffect} from 'react';
-import {AppState} from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
+import {Alert, AppState} from 'react-native';
 import {getSession, isDisconnected, lockSession, restoreOffline, subscribeSession} from './session';
 import {autoSync} from './autoSync';
 import {stopTracking} from '../components/BackgroundLocationService';
+import NetInfo from '@react-native-community/netinfo';
 
 export default function ConnectionGuard({navigationRef}) {
   useEffect(() => {
@@ -16,8 +16,9 @@ export default function ConnectionGuard({navigationRef}) {
       let destination;
       if (isDisconnected(state) && current.mode === 'online') {
         const account = await restoreOffline(current.server);
-        destination = account ? 'OfflineDashboard' : 'Login';
-        if (!account) { lockSession(); }
+        if (account) {
+          destination = 'OfflineDashboard';
+        }
       }
       if (state.isConnected === true && state.isInternetReachable !== false && current.mode === 'offline') {
         // Lock UI access, but retain saved authorization for automatic uploads.
@@ -26,15 +27,19 @@ export default function ConnectionGuard({navigationRef}) {
         autoSync().catch(error => console.warn('[Attendance auto sync]', error.message));
       }
       if (destination && active && version === revision) {
+        if (destination === 'Login') {
+          Alert.alert(
+            'Internet Reconnected',
+            'Internet wapas connect ho gaya hai. Pending attendance auto-sync ho rahi hai. Kripya login karein.',
+            [{text: 'OK'}]
+          );
+        }
         navigationRef.resetRoot({index: 0, routes: [{name: destination}]});
         stopTracking().catch(() => {});
       }
     };
-    const check = state => update(state).catch(() => {
-      lockSession();
-      if (active && navigationRef.isReady()) {
-        navigationRef.resetRoot({index: 0, routes: [{name: 'Login'}]});
-      }
+    const check = state => update(state).catch(err => {
+      console.warn('[ConnectionGuard check error]', err);
     });
     const recheck = () => {
       if (active && getSession() && navigationRef.isReady()) {

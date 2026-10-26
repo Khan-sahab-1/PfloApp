@@ -2,6 +2,10 @@ import BackgroundService from 'react-native-background-actions';
 import DeviceInfo from 'react-native-device-info';
 import Geolocation from 'react-native-geolocation-service';
 import {PermissionsAndroid, Platform} from 'react-native';
+import {
+  hasAcceptedLocationDisclosure,
+  requestGooglePlayCompliantPermissions,
+} from '../utils/locationDisclosure';
 
 const TRACKING_PATH = '/employee_live_tracking/api/ping';
 const REQUEST_TIMEOUT_MS = 25_000;
@@ -236,7 +240,14 @@ export const startTracking = async ({userinfo, serverOrigin}) => {
     return false;
   }
 
-  if (!(await requestAndroidPermissions())) {
+  // Google Play Compliance: Verify prominent location disclosure is accepted
+  const disclosureAccepted = await hasAcceptedLocationDisclosure();
+  if (!disclosureAccepted) {
+    console.warn(LOG_TAG, 'Cannot start live tracking: prominent disclosure has not been accepted by user');
+    return false;
+  }
+
+  if (!(await requestGooglePlayCompliantPermissions())) {
     return false;
   }
 

@@ -10,9 +10,9 @@
 // export  const  BASE_URL= "https://arkefilters.pflo.co.in";
 // export const BASE_URL = 'http://10.23.1.236:8085';
 
-// export const BASE_URL = 'https://preqa1.arkess.com';
+export const BASE_URL = 'https://preqa1.arkess.com';
 // export const BASE_URL = 'https://preqa2.arkess.com';
-export const BASE_URL = 'https://arkefilters.pflo.co.in';
+// export const BASE_URL = 'https://arkefilters.pflo.co.in';
 
 const domain = BASE_URL;
 

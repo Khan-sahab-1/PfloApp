@@ -44,6 +44,12 @@ import {
   startTracking,
   stopTracking,
 } from '../../components/BackgroundLocationService';
+import LocationDisclosureModal from '../../components/LocationDisclosureModal';
+import {
+  hasAcceptedLocationDisclosure,
+  setLocationDisclosureAccepted,
+  requestGooglePlayCompliantPermissions,
+} from '../../utils/locationDisclosure';
 import {
   getEmployeePunchTime,
   removeLegacyPunchTime,
@@ -53,6 +59,7 @@ const DashboardScreen = ({navigation, route}) => {
   // console.log(route?.,'Route Params in Home Screen')
   const [userData, setUserData] = useState(null);
   const [checkInTime, setCheckInTime] = useState(null);
+  const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [meetings, setMeetings] = useState([]);
   const contextType = useContext(AuthContext);
@@ -476,7 +483,19 @@ const handleLiveTracking = () => {
     </View>
   );
 
-  const onStart = async () => {
+  useEffect(() => {
+    const checkDisclosure = async () => {
+      if (userData?.result?.live_tracking_enabled) {
+        const accepted = await hasAcceptedLocationDisclosure();
+        if (!accepted) {
+          setShowLocationDisclosure(true);
+        }
+      }
+    };
+    checkDisclosure();
+  }, [userData?.result?.live_tracking_enabled]);
+
+  const performStartTracking = async () => {
     try {
       console.log('[PFLO Tracking] Start button pressed', {
         employeeCode: userData?.result?.emp_code,
@@ -502,6 +521,26 @@ const handleLiveTracking = () => {
         stack: e?.stack,
       });
     }
+  };
+
+  const onStart = async () => {
+    const accepted = await hasAcceptedLocationDisclosure();
+    if (!accepted) {
+      setShowLocationDisclosure(true);
+      return;
+    }
+    await performStartTracking();
+  };
+
+  const handleAcceptDisclosure = async () => {
+    setShowLocationDisclosure(false);
+    await setLocationDisclosureAccepted(true);
+    await requestGooglePlayCompliantPermissions();
+    await performStartTracking();
+  };
+
+  const handleDenyDisclosure = () => {
+    setShowLocationDisclosure(false);
   };
 
   const onStop = async () => {
@@ -637,6 +676,11 @@ const handleLiveTracking = () => {
         {/* <View style={styles.footer}><View style={styles.footerLine} /><Text style={styles.footerLabel}>SPACE TO DO YOUR BEST</Text><View style={styles.footerLine} /></View> */}
       </View>
       <Loader visible={isLoding} />
+      <LocationDisclosureModal
+        visible={showLocationDisclosure}
+        onAccept={handleAcceptDisclosure}
+        onDeny={handleDenyDisclosure}
+      />
     </ScrollView>
   );
 };

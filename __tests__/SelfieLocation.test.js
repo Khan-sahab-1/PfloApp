@@ -1,3 +1,4 @@
+jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 import React from 'react';
 import {act, create} from 'react-test-renderer';
 import {Alert, PermissionsAndroid, Platform, TouchableOpacity} from 'react-native';

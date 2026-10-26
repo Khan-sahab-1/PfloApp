@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import {isDisconnected, restoreSavedAccess} from './session';
+import {isDisconnected, restoreSavedAccess, restoreOnlineSession} from './session';
 
 const resolved = state => isDisconnected(state) ||
   (state.isConnected === true && state.isInternetReachable === true);
@@ -28,5 +28,12 @@ export async function startupConnection() {
 
 export async function restoreStartup() {
   const state = await startupConnection();
-  return isDisconnected(state) ? restoreSavedAccess() : null;
+  if (isDisconnected(state)) {
+    return restoreSavedAccess();
+  }
+  if (typeof restoreOnlineSession === 'function') {
+    const online = await restoreOnlineSession();
+    if (online) { return online; }
+  }
+  return null;
 }

@@ -98,7 +98,9 @@ const SelfieModal = ({ visible, onClose, navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const requestCameraPermission = async () => {
+
     try {
+      console.log('yaha tak aaya 1')
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
@@ -111,15 +113,38 @@ const SelfieModal = ({ visible, onClose, navigation }) => {
       );
 
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('yaha tak aaya 2')
         const result = await launchCamera({
           mediaType: 'photo',
           cameraType: 'front',
-          quality: 0.3,
+          quality: 0.35,
+          maxWidth: 480,
+          maxHeight: 640,
+          saveToPhotos: false,
+          includeBase64: false,
         });
 
-        if (result.assets && result.assets[0]) {
-          setImageUri(result.assets[0].uri);
-          setImageData(result.assets[0]);
+        if (result?.didCancel) {
+          return;
+        }
+
+        if (result?.errorCode) {
+          Alert.alert('Camera Error', result.errorMessage || 'Camera open nahi ho saka.');
+          return;
+        }
+
+        const captured = result?.assets?.[0];
+        if (captured?.uri) {
+          const safeData = {
+            ...captured,
+            type: captured.type || 'image/jpeg',
+            fileName: captured.fileName || `selfie-${Date.now()}.jpg`,
+            width: Math.min(Number(captured.width) || 1024, 1024),
+            height: Math.min(Number(captured.height) || 1024, 1024),
+          };
+          console.log('Captured Image Data:', safeData);
+          setImageUri(captured.uri);
+          setImageData(safeData);
         }
       } else {
         Alert.alert('Camera permission denied');

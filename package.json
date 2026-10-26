@@ -9,7 +9,7 @@
     "lint:ci": "eslint . --quiet",
     "start": "react-native start",
     "test": "jest --no-watchman",
-    "postinstall": "node scripts/prepare-sqlite.cjs && node scripts/prepare-geolocation.cjs && node scripts/prepare-gesture-handler.cjs"
+    "postinstall": "node scripts/prepare-sqlite.cjs && node scripts/prepare-geolocation.cjs && node scripts/prepare-gesture-handler.cjs && node scripts/prepare-image-resizer.cjs && node scripts/prepare-vision-camera.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -32,6 +32,7 @@
     "react-native-blob-util": "^0.24.10",
     "react-native-calendar-events": "^2.2.0",
     "react-native-calendars": "^1.1314.0",
+    "react-native-camera-kit": "^18.0.1",
     "react-native-device-info": "^15.0.2",
     "react-native-element-dropdown": "^2.12.4",
     "react-native-flash-message": "^0.4.2",
@@ -51,6 +52,7 @@
     "react-native-sqlite-storage": "^6.0.1",
     "react-native-table-component": "^1.2.2",
     "react-native-vector-icons": "^10.3.0",
+    "react-native-vision-camera": "^4.6.3",
     "react-redux": "^9.3.0"
   },
   "devDependencies": {

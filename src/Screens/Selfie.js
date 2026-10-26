@@ -11,9 +11,13 @@ import {
   Animated,
   Dimensions,
   Platform,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchCamera } from 'react-native-image-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Geolocation from 'react-native-geolocation-service';
 import {getAttendanceLocation} from '../utils/attendanceLocation';
 import HeaderCompo from '../components/HeaderCompo';
@@ -21,20 +25,29 @@ import { COLORS } from '../styles/Colors';
 import Loader from '../components/Loader';
 import { showFlashMessage } from '../utils/fleshmessage';
 
-const { width, height } = Dimensions.get('window');
+let CameraKitCamera = null;
+let CameraKitType = { Front: 'front', Back: 'back' };
+try {
+  const ck = require('react-native-camera-kit');
+  CameraKitCamera = ck.Camera;
+  CameraKitType = ck.CameraType || CameraKitType;
+} catch (_) {}
 
-const PLACEHOLDER =
-  'https://previews.123rf.com/images/aguiters/aguiters1508/aguiters150800059/43551287-photo-camera-icon.jpg';
+const { width, height } = Dimensions.get('window');
 
 const Selfie = ({navigation, route}) => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
-  const [picture, setpicture] = useState(PLACEHOLDER);
-  const [images, setimages] = useState(PLACEHOLDER);
+  const [picture, setpicture] = useState(null);
+  const [images, setimages] = useState(null);
   const [toggle, settoggle] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(false);
+  const [showInAppCamera, setShowInAppCamera] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState(CameraKitType.Front || 'front');
+  const [isCapturing, setIsCapturing] = useState(false);
+  const cameraKitRef = useRef(null);
   const isCameraOpeningRef = useRef(false);
   const locationRequestRef = useRef(null);
   const mountedRef = useRef(true);
@@ -90,6 +103,35 @@ const Selfie = ({navigation, route}) => {
 
   const shimmerOpacity = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.9] });
 
+  const handleInAppCapture = async () => {
+    if (!cameraKitRef.current || isCapturing) { return; }
+    setIsCapturing(true);
+    try {
+      const captured = await cameraKitRef.current.capture();
+      if (captured?.uri) {
+        const safePhoto = {
+          uri: captured.uri,
+          type: 'image/jpeg',
+          fileName: captured.name || `attendance-${Date.now()}.jpg`,
+          width: Math.min(Number(captured.width) || 480, 480),
+          height: Math.min(Number(captured.height) || 640, 640),
+        };
+        setpicture(safePhoto);
+        setimages(captured.uri);
+        settoggle(false);
+        setHasPhoto(true);
+        setShowInAppCamera(false);
+      } else {
+        Alert.alert('Camera Error', 'Photo capture nahi hui. Please try again.');
+      }
+    } catch (err) {
+      console.warn('In-app capture error:', err);
+      Alert.alert('Camera Error', 'Photo capture me problem aayi. Dobara try karein.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   // Camera and attendance location
   const requestCameraPermission = async () => {
     if (isCameraOpeningRef.current || locationRequestRef.current) {
@@ -101,10 +143,8 @@ const Selfie = ({navigation, route}) => {
       const granted = Platform.OS === 'android' ? await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
-          title: 'Cool Photo App Camera Permission',
-          message:
-            'Cool Photo App needs access to your camera ' +
-            'so you can take awesome pictures.',
+          title: 'Camera Permission',
+          message: 'PFLO requires camera access to capture your attendance selfie.',
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
@@ -112,16 +152,23 @@ const Selfie = ({navigation, route}) => {
       ) : PermissionsAndroid.RESULTS.GRANTED;
       if (!mountedRef.current || !navigation.isFocused()) { return; }
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        if (CameraKitCamera) {
+          setShowInAppCamera(true);
+          return;
+        }
+
         setIsLoading(true);
+        await AsyncStorage.setItem('pflo:camera_active', 'true');
         const result = await launchCamera({
           mediaType: 'photo',
           cameraType: 'front',
-          quality: 0.3,
-          maxWidth: 1280,
-          maxHeight: 1280,
+          quality: 0.35,
+          maxWidth: 480,
+          maxHeight: 640,
           saveToPhotos: false,
           includeBase64: false,
         });
+        await AsyncStorage.removeItem('pflo:camera_active');
 
         if (!mountedRef.current || !navigation.isFocused()) { return; }
         if (result?.didCancel) {
@@ -144,8 +191,10 @@ const Selfie = ({navigation, route}) => {
 
         const safePhoto = {
           ...capturedPhoto,
-          type: capturedPhoto.type || 'image/jpeg',
-          fileName: capturedPhoto.fileName || `attendance-${Date.now()}.jpg`,
+          type: 'image/jpeg',
+          fileName: `attendance-${Date.now()}.jpg`,
+          width: Math.min(Number(capturedPhoto.width) || 480, 480),
+          height: Math.min(Number(capturedPhoto.height) || 640, 640),
         };
 
         setpicture(safePhoto);
@@ -164,6 +213,7 @@ const Selfie = ({navigation, route}) => {
         Alert.alert('Camera Error', 'Camera open nahi ho saka. Please try again.');
       }
     } finally {
+      AsyncStorage.removeItem('pflo:camera_active').catch(() => {});
       if (mountedRef.current) { setIsLoading(false); }
       isCameraOpeningRef.current = false;
     }
@@ -257,11 +307,13 @@ const Selfie = ({navigation, route}) => {
             <View style={[styles.corner, styles.cornerBL, { borderColor: accent }]} />
             <View style={[styles.corner, styles.cornerBR, { borderColor: accent }]} />
 
-            <Image
-              style={styles.photo}
-              source={{ uri: images }}
-              resizeMode={hasPhoto ? 'cover' : 'contain'}
-            />
+            {hasPhoto && images ? (
+              <Image
+                style={styles.photo}
+                source={{ uri: images }}
+                resizeMode="cover"
+              />
+            ) : null}
 
             {/* Overlay hint when no photo */}
             {!hasPhoto && (
@@ -340,10 +392,166 @@ const Selfie = ({navigation, route}) => {
         </Animated.View>
 
         <Loader visible={isLoading} />
+
+        {showInAppCamera && CameraKitCamera && (
+          <Modal
+            visible={showInAppCamera}
+            animationType="slide"
+            presentationStyle="fullScreen"
+            onRequestClose={() => setShowInAppCamera(false)}
+          >
+            <View style={cameraStyles.fullScreen}>
+              <StatusBar barStyle="light-content" backgroundColor="#000000" />
+              <Suspense
+                fallback={
+                  <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <ActivityIndicator size="large" color="#FF5733" />
+                  </View>
+                }
+              >
+                <CameraKitCamera
+                  ref={cameraKitRef}
+                  cameraType={cameraFacing}
+                  style={StyleSheet.absoluteFill}
+                />
+              </Suspense>
+              <SafeAreaView style={cameraStyles.topBar}>
+                <TouchableOpacity
+                  onPress={() => setShowInAppCamera(false)}
+                  style={cameraStyles.topIconBtn}
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                >
+                  <Text style={cameraStyles.topIconText}>✕</Text>
+                </TouchableOpacity>
+                <Text style={cameraStyles.topTitle}>Attendance Selfie</Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setCameraFacing(prev =>
+                      prev === CameraKitType.Front ? CameraKitType.Back : CameraKitType.Front,
+                    )
+                  }
+                  style={cameraStyles.topIconBtn}
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                >
+                  <Text style={cameraStyles.topIconText}>🔄</Text>
+                </TouchableOpacity>
+              </SafeAreaView>
+
+              <View pointerEvents="none" style={cameraStyles.guideContainer}>
+                <View style={cameraStyles.faceOval} />
+                <Text style={cameraStyles.guideText}>Align your face in the oval</Text>
+              </View>
+
+              <SafeAreaView style={cameraStyles.bottomBar}>
+                <TouchableOpacity
+                  onPress={handleInAppCapture}
+                  disabled={isCapturing}
+                  activeOpacity={0.75}
+                  style={cameraStyles.shutterOuter}
+                >
+                  <View style={cameraStyles.shutterInner}>
+                    {isCapturing && <ActivityIndicator size="small" color="#FF5733" />}
+                  </View>
+                </TouchableOpacity>
+              </SafeAreaView>
+            </View>
+          </Modal>
+        )}
       </View>
     </>
   );
 };
+
+const cameraStyles = StyleSheet.create({
+  fullScreen: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  topBar: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 24 : 10,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  topIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topIconText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  topTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  guideContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  faceOval: {
+    width: width * 0.72,
+    height: height * 0.44,
+    borderRadius: width * 0.36,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderStyle: 'dashed',
+    backgroundColor: 'transparent',
+  },
+  guideText: {
+    marginTop: 20,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 36,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+  shutterOuter: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shutterInner: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({

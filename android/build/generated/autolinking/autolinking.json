@@ -252,6 +252,33 @@
         }
       }
     },
+    "react-native-camera-kit": {
+      "root": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-camera-kit",
+      "name": "react-native-camera-kit",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-camera-kit/ReactNativeCameraKit.podspec",
+          "version": "18.0.1",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-camera-kit/android",
+          "packageImportPath": "import com.rncamerakit.RNCameraKitPackage;",
+          "packageInstance": "new RNCameraKitPackage()",
+          "buildTypes": [],
+          "libraryName": "NativeCameraKitSpec",
+          "componentDescriptors": [
+            "CKCameraComponentDescriptor"
+          ],
+          "cmakeListsPath": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-camera-kit/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "react-native-device-info": {
       "root": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-device-info",
       "name": "react-native-device-info",
@@ -557,6 +584,30 @@
           "libraryName": "RNVectorIconsSpec",
           "componentDescriptors": [],
           "cmakeListsPath": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "react-native-vision-camera": {
+      "root": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-vision-camera",
+      "name": "react-native-vision-camera",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-vision-camera/VisionCamera.podspec",
+          "version": "4.6.3",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-vision-camera/android",
+          "packageImportPath": "import com.mrousavy.camera.react.CameraPackage;",
+          "packageInstance": "new CameraPackage()",
+          "buildTypes": [],
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/jamshedali/Desktop/Chaddha_Industry/pflo/node_modules/react-native-vision-camera/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,

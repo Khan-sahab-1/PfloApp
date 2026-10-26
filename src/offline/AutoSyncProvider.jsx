@@ -21,13 +21,20 @@ export default function AutoSyncProvider() {
     // Login changes scheduler authorization; uploads have independent triggers.
     const subscription = subscribeSession(() => refresh(false));
     const network = NetInfo.addEventListener(state => {
-      if (mounted && state.isConnected === true && state.isInternetReachable !== false) { sync(); }
+      if (mounted && state.isConnected === true && state.isInternetReachable !== false) {
+        sync();
+        setTimeout(() => { if (mounted) { sync(); } }, 3500);
+      }
     });
-    const foreground = AppState.addEventListener('change', state => { if (state === 'active') { refresh(); } });
+    const foreground = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        refresh(true);
+      }
+    });
     // Retry transient failures even when connectivity does not emit another change.
     const retry = setInterval(() => {
       if (mounted && AppState.currentState === 'active') { sync(); }
-    }, 15000);
+    }, 10000);
     return () => { mounted = false; clearInterval(retry); subscription(); network(); foreground.remove(); };
   }, []);
   return null;

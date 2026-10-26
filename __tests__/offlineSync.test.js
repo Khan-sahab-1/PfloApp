@@ -28,7 +28,7 @@ beforeEach(() => {
 test('uploads original timestamp and only acknowledges the matching account after confirmation', async () => {
   expect(await syncPendingAttendance()).toEqual({synced: 1, reason: null});
   expect(pendingAttendance).toHaveBeenCalledWith(account);
-  expect(axios.post.mock.calls[0][0]).toBe('https://example.com/attendance/offline/sync/v3');
+  expect(axios.post.mock.calls[0][0]).toBe('https://example.com/attendance/offline/sync/v4');
   expect(axios.post.mock.calls[0][1].params).toMatchObject({
     events: [
       {

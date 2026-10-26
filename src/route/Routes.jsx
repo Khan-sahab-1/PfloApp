@@ -1,29 +1,44 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {ActivityIndicator} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import MainStack from './MainStack';
 import {AuthContext} from '../Screens/Context';
-import {restoreStartup} from '../offline/startup';
+import {getSavedAccount} from '../offline/session';
 
 const Stack = createNativeStackNavigator();
 
 export default function Routes() {
   const {setCurrentUrl} = useContext(AuthContext);
   const [initialRoute, setInitialRoute] = useState(null);
+
   useEffect(() => {
     let active = true;
-    // Resolve the saved employee before mounting any protected screen.
-    restoreStartup()
-      .then(account => {
-        if (active) {
-          if (account) { setCurrentUrl(account.server); }
-          setInitialRoute(account ? 'OfflineDashboard' : 'Login');
+    (async () => {
+      try {
+        const wasCameraActive = await AsyncStorage.getItem('pflo:camera_active');
+        if (wasCameraActive === 'true') {
+          await AsyncStorage.removeItem('pflo:camera_active');
         }
-      })
-      .catch(() => { if (active) { setInitialRoute('Login'); } });
+
+        // Configure saved server URL so custom URLs are remembered
+        const account = await getSavedAccount();
+        if (account?.server) {
+          setCurrentUrl(account.server);
+        }
+
+        // Per user requirement: Every time app opens, require fresh Login!
+        if (active) {
+          setInitialRoute('Login');
+        }
+      } catch (err) {
+        if (active) {
+          setInitialRoute('Login');
+        }
+      }
+    })();
     return () => { active = false; };
-    // Server selection changes on Login; bootstrap runs only on app launch.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setCurrentUrl]);
+
   return initialRoute ? MainStack(Stack, initialRoute) : <ActivityIndicator size="large" />;
 }

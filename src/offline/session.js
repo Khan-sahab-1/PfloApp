@@ -3,6 +3,7 @@ import NetInfo from '@react-native-community/netinfo';
 
 const KEY = 'attendance:last-authorized-employee:v1';
 const SIGNED_OUT_KEY = 'attendance:signed-out:v1';
+const ONLINE_SESSION_KEY = 'attendance:online-session:v1';
 let session = null;
 let generation = 0;
 const listeners = new Set();
@@ -56,9 +57,11 @@ export async function saveLogin(result, server) {
     } else {
       await AsyncStorage.setItem(KEY, JSON.stringify(account));
     }
+    await AsyncStorage.removeItem(ONLINE_SESSION_KEY);
   } else {
     // Keep the existing online-only flow, including revoked offline permission.
     await AsyncStorage.removeItem(KEY);
+    await AsyncStorage.setItem(ONLINE_SESSION_KEY, JSON.stringify(account));
   }
   await AsyncStorage.removeItem(SIGNED_OUT_KEY);
   if (version !== generation) { return; }
@@ -104,16 +107,41 @@ export async function restoreOffline(server, username = '') {
 export async function logoutAttendance() {
   generation += 1;
   session = null;
+  await AsyncStorage.removeItem(ONLINE_SESSION_KEY);
+  await AsyncStorage.removeItem('attendance:saved_credentials');
   // Retain authorization so the saved employee can explicitly sign in offline.
   await AsyncStorage.setItem(SIGNED_OUT_KEY, 'true');
   notifySession();
 }
 
+export async function restoreOnlineSession() {
+  const version = generation;
+  if (await AsyncStorage.getItem(SIGNED_OUT_KEY) === 'true') { return null; }
+  try {
+    const raw = await AsyncStorage.getItem(ONLINE_SESSION_KEY);
+    let account = null;
+    if (raw) {
+      account = JSON.parse(raw);
+    } else {
+      account = await getSavedAccount();
+    }
+    if (!account?.server || version !== generation) { return null; }
+    session = {...account, mode: 'online'};
+    notifySession();
+    return session;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireAttendanceAccess(server, employeeCode) {
+  let current = session;
+  if (!current) {
+    current = await restoreOnlineSession();
+  }
   const state = await NetInfo.fetch();
-  const current = session;
   if (!current || current.server !== normalizeServer(server) ||
-      (current.employee && current.employee.emp_code !== employeeCode)) {
+      (current.employee && employeeCode && current.employee.emp_code !== employeeCode)) {
     throw new Error('Please log in again before marking attendance.');
   }
   if (isDisconnected(state)) {
