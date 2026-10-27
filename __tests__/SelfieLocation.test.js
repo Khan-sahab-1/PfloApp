@@ -8,6 +8,11 @@ import Selfie from '../src/Screens/Selfie';
 jest.mock('react-native-image-picker', () => ({launchCamera: jest.fn()}));
 jest.mock('react-native-geolocation-service', () => ({requestAuthorization: jest.fn()}));
 jest.mock('../src/utils/attendanceLocation', () => ({getAttendanceLocation: jest.fn()}));
+jest.mock('../src/utils/locationDisclosure', () => ({
+  hasAcceptedLocationDisclosure: jest.fn().mockResolvedValue(true),
+  setLocationDisclosureAccepted: jest.fn().mockResolvedValue(undefined),
+  requestGooglePlayCompliantPermissions: jest.fn().mockResolvedValue(true),
+}));
 jest.mock('../src/components/HeaderCompo', () => 'Header');
 jest.mock('../src/components/Loader', () => 'Loader');
 jest.mock('../src/utils/fleshmessage', () => ({showFlashMessage: jest.fn()}));

@@ -9,8 +9,20 @@ import {
   Dimensions,
   useColorScheme,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { COLORS } from '../styles/Colors';
+
+let IoniconsComponent = null;
+try {
+  const vicons = require('react-native-vector-icons/Ionicons');
+  IoniconsComponent = vicons.default || vicons;
+} catch (_) {}
+
+const Icon = ({ name, size = 20, color = '#FFFFFF', style }) => {
+  if (IoniconsComponent) {
+    return <IoniconsComponent name={name} size={size} color={color} style={style} />;
+  }
+  return <Text style={[{ fontSize: size * 0.7, color }, style]}>📍</Text>;
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -40,7 +52,7 @@ const LocationDisclosureModal = ({
           {/* Header Icon */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="location" size={36} color="#FFFFFF" />
+              <Icon name="location" size={36} color="#FFFFFF" />
             </View>
             <Text style={[styles.title, isDark && styles.textLight]}>
               Location Access &amp; Duty Tracking
@@ -58,7 +70,7 @@ const LocationDisclosureModal = ({
           >
             {/* Core Google Play Policy Statement (DO NOT ALTER) */}
             <View style={styles.highlightBox}>
-              <Ionicons name="information-circle" size={24} color="#D97706" style={{ marginTop: 2 }} />
+              <Icon name="information-circle" size={24} color="#D97706" style={{ marginTop: 2 }} />
               <Text style={styles.highlightText}>
                 <Text style={{ fontWeight: '700' }}>PFLO</Text> collects location data to enable{' '}
                 <Text style={{ fontWeight: '700' }}>
@@ -72,7 +84,7 @@ const LocationDisclosureModal = ({
             <View style={styles.featureList}>
               <View style={styles.featureItem}>
                 <View style={[styles.featureIconWrap, { backgroundColor: '#EEF2FF' }]}>
-                  <Ionicons name="time-outline" size={20} color="#4F46E5" />
+                  <Icon name="time-outline" size={20} color="#4F46E5" />
                 </View>
                 <View style={styles.featureTextWrap}>
                   <Text style={[styles.featureTitle, isDark && styles.textLight]}>
@@ -86,7 +98,7 @@ const LocationDisclosureModal = ({
 
               <View style={styles.featureItem}>
                 <View style={[styles.featureIconWrap, { backgroundColor: '#ECFDF5' }]}>
-                  <Ionicons name="shield-checkmark-outline" size={20} color="#059669" />
+                  <Icon name="shield-checkmark-outline" size={20} color="#059669" />
                 </View>
                 <View style={styles.featureTextWrap}>
                   <Text style={[styles.featureTitle, isDark && styles.textLight]}>
@@ -100,7 +112,7 @@ const LocationDisclosureModal = ({
 
               <View style={styles.featureItem}>
                 <View style={[styles.featureIconWrap, { backgroundColor: '#FEF3C7' }]}>
-                  <Ionicons name="notifications-outline" size={20} color="#D97706" />
+                  <Icon name="notifications-outline" size={20} color="#D97706" />
                 </View>
                 <View style={styles.featureTextWrap}>
                   <Text style={[styles.featureTitle, isDark && styles.textLight]}>

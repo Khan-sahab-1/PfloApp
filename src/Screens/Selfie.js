@@ -24,6 +24,12 @@ import HeaderCompo from '../components/HeaderCompo';
 import { COLORS } from '../styles/Colors';
 import Loader from '../components/Loader';
 import { showFlashMessage } from '../utils/fleshmessage';
+import LocationDisclosureModal from '../components/LocationDisclosureModal';
+import {
+  hasAcceptedLocationDisclosure,
+  setLocationDisclosureAccepted,
+  requestGooglePlayCompliantPermissions,
+} from '../utils/locationDisclosure';
 
 let CameraKitCamera = null;
 let CameraKitType = { Front: 'front', Back: 'back' };
@@ -47,6 +53,7 @@ const Selfie = ({navigation, route}) => {
   const [showInAppCamera, setShowInAppCamera] = useState(false);
   const [cameraFacing, setCameraFacing] = useState(CameraKitType.Front || 'front');
   const [isCapturing, setIsCapturing] = useState(false);
+  const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
   const cameraKitRef = useRef(null);
   const isCameraOpeningRef = useRef(false);
   const locationRequestRef = useRef(null);
@@ -219,12 +226,28 @@ const Selfie = ({navigation, route}) => {
     }
   };
 
+  const handleAcceptLocationDisclosure = async () => {
+    setShowLocationDisclosure(false);
+    await setLocationDisclosureAccepted(true);
+    await requestGooglePlayCompliantPermissions();
+    checkPermissionGPS();
+  };
+
+  const handleDenyLocationDisclosure = () => {
+    setShowLocationDisclosure(false);
+  };
+
   const checkPermissionGPS = async () => {
     if (locationRequestRef.current || isCameraOpeningRef.current || !picture?.uri) { return; }
     const request = new AbortController();
     locationRequestRef.current = request;
     setIsLoading(true);
     try {
+      const accepted = await hasAcceptedLocationDisclosure();
+      if (!accepted) {
+        setShowLocationDisclosure(true);
+        return;
+      }
       if (Platform.OS === 'android') {
         const permissions = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -457,6 +480,11 @@ const Selfie = ({navigation, route}) => {
             </View>
           </Modal>
         )}
+        <LocationDisclosureModal
+          visible={showLocationDisclosure}
+          onAccept={handleAcceptLocationDisclosure}
+          onDeny={handleDenyLocationDisclosure}
+        />
       </View>
     </>
   );

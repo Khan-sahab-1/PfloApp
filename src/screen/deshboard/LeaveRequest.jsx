@@ -1,5 +1,3 @@
-
-
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -113,11 +111,7 @@ const TimeStrip = ({
           />
         </View>
 
-        <Icon
-          name="arrow-forward"
-          size={18}
-          color={colors.muted}
-        />
+        <Icon name="arrow-forward" size={18} color={colors.muted} />
 
         {/* TO */}
         <View style={styles.timeField}>
@@ -164,19 +158,15 @@ const LeaveRequestForm = ({ route, navigation }) => {
   const loginEmpCode = routeParams.employeeCode || "";
 
   const canDelegate =
-    routeParams.isManager !== "hr.employee()" ||
-    routeParams.leaveManager;
+    routeParams.isManager !== "hr.employee()" || routeParams.leaveManager;
 
-  const [employeeCode, setEmployeeCode] =
-    useState(loginEmpCode);
+  const [employeeCode, setEmployeeCode] = useState(loginEmpCode);
 
-  const [employeeName, setEmployeeName] =
-    useState(routeParams.userName || "");
+  const [employeeName, setEmployeeName] = useState(routeParams.userName || "");
 
   const [forOther, setForOther] = useState(false);
 
-  const [selectedEmployee, setSelectedEmployee] =
-    useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [employees, setEmployees] = useState([]);
 
@@ -206,11 +196,9 @@ const LeaveRequestForm = ({ route, navigation }) => {
 
   const [timing, setTiming] = useState({});
 
-  const [calendarVisible, setCalendarVisible] =
-    useState(false);
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
-  const [calendarTarget, setCalendarTarget] =
-    useState("from");
+  const [calendarTarget, setCalendarTarget] = useState("from");
 
   const [loading, setLoading] = useState(false);
 
@@ -239,30 +227,23 @@ const LeaveRequestForm = ({ route, navigation }) => {
   ------------------------------------------------------- */
 
   const decimalTime = (value) => {
-    if (
-      value === "" ||
-      value == null ||
-      Number.isNaN(Number(value))
-    ) {
+    if (value === "" || value == null || Number.isNaN(Number(value))) {
       return "";
     }
 
     const hours = Math.floor(Number(value));
 
-    const minutes = Math.round(
-      (Number(value) - hours) * 60
-    );
+    const minutes = Math.round((Number(value) - hours) * 60);
 
-    return `${String(hours).padStart(2, "0")}:${String(
-      minutes
-    ).padStart(2, "0")}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0",
+    )}`;
   };
 
-  const shiftFrom =
-    timing?.shift_timing?.[0]?.hour_from ?? "";
+  const shiftFrom = timing?.shift_timing?.[0]?.hour_from ?? "";
 
-  const shiftTo =
-    timing?.shift_timing?.[0]?.hour_to ?? "";
+  const shiftTo = timing?.shift_timing?.[0]?.hour_to ?? "";
 
   /* -------------------------------------------------------
      FIX:
@@ -284,26 +265,20 @@ const LeaveRequestForm = ({ route, navigation }) => {
       : "";
 
   const shortTimes = useMemo(() => {
-    const limit = Number(
-      timing?.shift_timing?.[0]?.hour_to ?? 19
-    );
+    const limit = Number(timing?.shift_timing?.[0]?.hour_to ?? 19);
 
-    const duration = Number(
-      timing?.short_leave_time || 0
-    );
+    const duration = Number(timing?.short_leave_time || 0);
 
     const now = new Date();
 
     const start = Math.min(
       now.getHours() + now.getMinutes() / 60,
-      limit - duration
+      limit - duration,
     );
 
     return {
       from: decimalTime(start),
-      to: decimalTime(
-        Math.min(start + duration, limit)
-      ),
+      to: decimalTime(Math.min(start + duration, limit)),
     };
   }, [timing]);
 
@@ -322,13 +297,7 @@ const LeaveRequestForm = ({ route, navigation }) => {
       setTimeFrom(decimalTime(half));
       setTimeTo(decimalTime(shiftTo));
     }
-  }, [
-    fromLabel,
-    half,
-    shiftFrom,
-    shiftTo,
-    shortTimes,
-  ]);
+  }, [fromLabel, half, shiftFrom, shiftTo, shortTimes]);
 
   /* -------------------------------------------------------
      Set last-day time
@@ -345,13 +314,7 @@ const LeaveRequestForm = ({ route, navigation }) => {
       setLastTimeFrom(decimalTime(half));
       setLastTimeTo(decimalTime(shiftTo));
     }
-  }, [
-    half,
-    shiftFrom,
-    shiftTo,
-    shortTimes,
-    toLabel,
-  ]);
+  }, [half, shiftFrom, shiftTo, shortTimes, toLabel]);
 
   /* -------------------------------------------------------
      Reset
@@ -386,7 +349,7 @@ const LeaveRequestForm = ({ route, navigation }) => {
         params: {
           employeeCode: code,
         },
-      }
+      },
     );
 
     if (!response?.result) {
@@ -396,12 +359,10 @@ const LeaveRequestForm = ({ route, navigation }) => {
     setTiming(response.result);
 
     setLeaveTypes(
-      (response.result.leave_data || []).map(
-        (item) => ({
-          label: item.name,
-          value: item.id,
-        })
-      )
+      (response.result.leave_data || []).map((item) => ({
+        label: item.name,
+        value: item.id,
+      })),
     );
   };
 
@@ -417,16 +378,14 @@ const LeaveRequestForm = ({ route, navigation }) => {
     if (!value) {
       setSelectedEmployee(null);
 
-      setEmployeeName(
-        routeParams.userName || ""
-      );
+      setEmployeeName(routeParams.userName || "");
 
       setEmployeeCode(loginEmpCode);
 
       loadLeaveTypes(loginEmpCode).catch(() => {
         Alert.alert(
           "Unable to load form",
-          "Self leave types could not be loaded."
+          "Self leave types could not be loaded.",
         );
       });
     }
@@ -448,7 +407,7 @@ const LeaveRequestForm = ({ route, navigation }) => {
     loadLeaveTypes(item.value).catch(() => {
       Alert.alert(
         "Unable to load form",
-        "Selected employee leave types could not be loaded."
+        "Selected employee leave types could not be loaded.",
       );
     });
   };
@@ -468,32 +427,29 @@ const LeaveRequestForm = ({ route, navigation }) => {
           },
         });
 
-        const [, employeeResponse] =
-          await Promise.all([
-            loadLeaveTypes(loginEmpCode),
+        const [, employeeResponse] = await Promise.all([
+          loadLeaveTypes(loginEmpCode),
 
-            makeApiCall(
-              serverOrigin,
-              urls.getLeaveEmployee,
-              "POST",
-              body(loginEmpCode)
-            ),
-          ]);
+          makeApiCall(
+            serverOrigin,
+            urls.getLeaveEmployee,
+            "POST",
+            body(loginEmpCode),
+          ),
+        ]);
 
         if (employeeResponse?.result) {
           setEmployees(
-            employeeResponse.result.map(
-              (emp) => ({
-                label: emp.employee_name.trim(),
-                value: emp.employee_code,
-              })
-            )
+            employeeResponse.result.map((emp) => ({
+              label: emp.employee_name.trim(),
+              value: emp.employee_code,
+            })),
           );
         }
       } catch (error) {
         Alert.alert(
           "Unable to load form",
-          "Please check your connection and try again."
+          "Please check your connection and try again.",
         );
       }
     };
@@ -508,13 +464,9 @@ const LeaveRequestForm = ({ route, navigation }) => {
   const formatDate = (value) => {
     if (!value) return "";
 
-    const [year, month, day] =
-      value.split("-");
+    const [year, month, day] = value.split("-");
 
-    const name = new Date(
-      +year,
-      +month - 1
-    ).toLocaleString("en", {
+    const name = new Date(+year, +month - 1).toLocaleString("en", {
       month: "short",
     });
 
@@ -526,19 +478,13 @@ const LeaveRequestForm = ({ route, navigation }) => {
       fromDate && toDate
         ? Math.max(
             1,
-            Math.round(
-              (new Date(toDate) -
-                new Date(fromDate)) /
-                86400000
-            ) + 1
+            Math.round((new Date(toDate) - new Date(fromDate)) / 86400000) + 1,
           )
         : 0,
-    [fromDate, toDate]
+    [fromDate, toDate],
   );
 
-  const sameDay = Boolean(
-    fromDate && fromDate === toDate
-  );
+  const sameDay = Boolean(fromDate && fromDate === toDate);
 
   /* -------------------------------------------------------
      Time validation
@@ -549,15 +495,9 @@ const LeaveRequestForm = ({ route, navigation }) => {
       return false;
     }
 
-    const [hours, minutes] =
-      value.split(":").map(Number);
+    const [hours, minutes] = value.split(":").map(Number);
 
-    return (
-      hours >= 0 &&
-      hours <= 23 &&
-      minutes >= 0 &&
-      minutes <= 59
-    );
+    return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
   };
 
   /* -------------------------------------------------------
@@ -576,19 +516,16 @@ const LeaveRequestForm = ({ route, navigation }) => {
     ) {
       Alert.alert(
         "A few details are missing",
-        "Please complete all required fields before submitting."
+        "Please complete all required fields before submitting.",
       );
 
       return;
     }
 
-    if (
-      new Date(toDate) <
-      new Date(fromDate)
-    ) {
+    if (new Date(toDate) < new Date(fromDate)) {
       Alert.alert(
         "Invalid date range",
-        "The end date cannot be before the start date."
+        "The end date cannot be before the start date.",
       );
 
       return;
@@ -596,107 +533,68 @@ const LeaveRequestForm = ({ route, navigation }) => {
 
     if (
       (timedTypes.includes(fromLabel) &&
-        (!isValidTime(timeFrom) ||
-          !isValidTime(timeTo))) ||
+        (!isValidTime(timeFrom) || !isValidTime(timeTo))) ||
       (!sameDay &&
         timedTypes.includes(toLabel) &&
-        (!isValidTime(lastTimeFrom) ||
-          !isValidTime(lastTimeTo)))
+        (!isValidTime(lastTimeFrom) || !isValidTime(lastTimeTo)))
     ) {
-      Alert.alert(
-        "Invalid time",
-        "Please enter time in 24-hour HH:MM format."
-      );
+      Alert.alert("Invalid time", "Please enter time in 24-hour HH:MM format.");
 
       return;
     }
 
-    const firstFrom = timedTypes.includes(
-      fromLabel
-    )
-      ? timeFrom
-      : null;
+    const firstFrom = timedTypes.includes(fromLabel) ? timeFrom : null;
 
-    const firstTo = timedTypes.includes(
-      fromLabel
-    )
-      ? timeTo
-      : null;
+    const firstTo = timedTypes.includes(fromLabel) ? timeTo : null;
 
-    const lastFrom = timedTypes.includes(
-      toLabel
-    )
-      ? lastTimeFrom
-      : null;
+    const lastFrom = timedTypes.includes(toLabel) ? lastTimeFrom : null;
 
-    const lastTo = timedTypes.includes(
-      toLabel
-    )
-      ? lastTimeTo
-      : null;
+    const lastTo = timedTypes.includes(toLabel) ? lastTimeTo : null;
 
     try {
       setLoading(true);
 
-      const response = await makeApiCall(
-        serverOrigin,
-        urls.getLeave,
-        "POST",
-        {
-          jsonrpc: "2.0",
-          method: "call",
-          params: {
-            employeeName,
-            employeeCode,
-            description: description.trim(),
-            fromDate,
-            toDate,
-            leaveType: null,
-            leaveTypeFrom: fromLabel,
-            leaveTypeTo: sameDay
-              ? fromLabel
-              : toLabel,
-            timeFrom: firstFrom,
-            timeTo: firstTo,
-            time_from_down: sameDay
-              ? firstFrom
-              : lastFrom,
-            time_to_down: sameDay
-              ? firstTo
-              : lastTo,
-            selectedRestrictedLeaveID: "",
-            loginEmpCode,
-          },
-        }
-      );
+      const response = await makeApiCall(serverOrigin, urls.getLeave, "POST", {
+        jsonrpc: "2.0",
+        method: "call",
+        params: {
+          employeeName,
+          employeeCode,
+          description: description.trim(),
+          fromDate,
+          toDate,
+          leaveType: null,
+          leaveTypeFrom: fromLabel,
+          leaveTypeTo: sameDay ? fromLabel : toLabel,
+          timeFrom: firstFrom,
+          timeTo: firstTo,
+          time_from_down: sameDay ? firstFrom : lastFrom,
+          time_to_down: sameDay ? firstTo : lastTo,
+          selectedRestrictedLeaveID: "",
+          loginEmpCode,
+        },
+      });
 
       if (response?.result?.error) {
         showMessage({
           message: "Request not submitted",
-          description: String(
-            response.result.error
-          ).replace(/[()']/g, ""),
+          description: String(response.result.error).replace(/[()']/g, ""),
           type: "danger",
         });
       } else if (response?.result) {
         showMessage({
           message: "Leave request sent",
           description:
-            response.result.message ||
-            "Your request is now awaiting approval.",
+            response.result.message || "Your request is now awaiting approval.",
           type: "success",
         });
 
-        setTimeout(
-          () => navigation.goBack(),
-          900
-        );
+        setTimeout(() => navigation.goBack(), 900);
       }
     } catch (error) {
       showMessage({
         message: "Something went wrong",
-        description:
-          "We could not submit your request. Please try again.",
+        description: "We could not submit your request. Please try again.",
         type: "danger",
       });
     } finally {
@@ -708,13 +606,12 @@ const LeaveRequestForm = ({ route, navigation }) => {
      Label
   ------------------------------------------------------- */
 
-
   const today = new Date();
-const todayString = [
-  today.getFullYear(),
-  String(today.getMonth() + 1).padStart(2, "0"),
-  String(today.getDate()).padStart(2, "0"),
-].join("-");
+  const todayString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
   const Label = ({ children }) => (
     <Text
       style={[
@@ -732,11 +629,7 @@ const todayString = [
      Date field
   ------------------------------------------------------- */
 
-  const DateField = ({
-    label,
-    value,
-    target,
-  }) => (
+  const DateField = ({ label, value, target }) => (
     <View style={styles.flex}>
       <Label>{label}</Label>
 
@@ -762,11 +655,7 @@ const todayString = [
             },
           ]}
         >
-          <Icon
-            name="calendar-outline"
-            size={18}
-            color={ACCENT}
-          />
+          <Icon name="calendar-outline" size={18} color={ACCENT} />
         </View>
 
         <View style={styles.flex}>
@@ -774,15 +663,11 @@ const todayString = [
             style={[
               styles.dateValue,
               {
-                color: value
-                  ? colors.text
-                  : colors.muted,
+                color: value ? colors.text : colors.muted,
               },
             ]}
           >
-            {value
-              ? formatDate(value)
-              : "Select date"}
+            {value ? formatDate(value) : "Select date"}
           </Text>
 
           <Text
@@ -793,17 +678,11 @@ const todayString = [
               },
             ]}
           >
-            {target === "from"
-              ? "Leave begins"
-              : "Leave ends"}
+            {target === "from" ? "Leave begins" : "Leave ends"}
           </Text>
         </View>
 
-        <Icon
-          name="chevron-down"
-          size={16}
-          color={colors.muted}
-        />
+        <Icon name="chevron-down" size={16} color={colors.muted} />
       </TouchableOpacity>
     </View>
   );
@@ -812,11 +691,7 @@ const todayString = [
      Section header
   ------------------------------------------------------- */
 
-  const SectionHead = ({
-    icon,
-    title,
-    subtitle,
-  }) => (
+  const SectionHead = ({ icon, title, subtitle }) => (
     <View style={styles.sectionHead}>
       <View
         style={[
@@ -826,11 +701,7 @@ const todayString = [
           },
         ]}
       >
-        <Icon
-          name={icon}
-          size={19}
-          color={ACCENT}
-        />
+        <Icon name={icon} size={19} color={ACCENT} />
       </View>
 
       <View>
@@ -876,16 +747,10 @@ const todayString = [
 
       <KeyboardAvoidingView
         style={styles.screen}
-        behavior={
-          Platform.OS === "ios"
-            ? "padding"
-            : undefined
-        }
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={
-            styles.content
-          }
+          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -907,16 +772,11 @@ const todayString = [
                 style={[
                   styles.delegateIcon,
                   {
-                    backgroundColor:
-                      colors.soft,
+                    backgroundColor: colors.soft,
                   },
                 ]}
               >
-                <Icon
-                  name="people-outline"
-                  size={21}
-                  color={ACCENT}
-                />
+                <Icon name="people-outline" size={21} color={ACCENT} />
               </View>
 
               <View style={styles.flex}>
@@ -945,18 +805,12 @@ const todayString = [
 
               <Switch
                 value={forOther}
-                onValueChange={
-                  handleDelegateChange
-                }
+                onValueChange={handleDelegateChange}
                 trackColor={{
                   false: "#CBD5E1",
                   true: "#A5B4FC",
                 }}
-                thumbColor={
-                  forOther
-                    ? ACCENT
-                    : "#F8FAFC"
-                }
+                thumbColor={forOther ? ACCENT : "#F8FAFC"}
               />
             </View>
           )}
@@ -982,24 +836,18 @@ const todayString = [
 
             {forOther ? (
               <>
-                <Label>
-                  Team member *
-                </Label>
+                <Label>Team member *</Label>
 
                 <SingleDropdown
                   data={employees}
                   value={selectedEmployee}
-                  onChange={
-                    handleEmployeeChange
-                  }
+                  onChange={handleEmployeeChange}
                   placeholder="Search employee"
                   style={[
                     styles.dropdown,
                     {
-                      backgroundColor:
-                        colors.input,
-                      borderColor:
-                        colors.border,
+                      backgroundColor: colors.input,
+                      borderColor: colors.border,
                     },
                   ]}
                 />
@@ -1009,20 +857,14 @@ const todayString = [
                 style={[
                   styles.profile,
                   {
-                    backgroundColor:
-                      colors.input,
-                    borderColor:
-                      colors.border,
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
                   },
                 ]}
               >
                 <View style={styles.avatar}>
-                  <Text
-                    style={styles.avatarText}
-                  >
-                    {(employeeName || "E")
-                      .trim()[0]
-                      .toUpperCase()}
+                  <Text style={styles.avatarText}>
+                    {(employeeName || "E").trim()[0].toUpperCase()}
                   </Text>
                 </View>
 
@@ -1035,38 +877,25 @@ const todayString = [
                       },
                     ]}
                   >
-                    {employeeName ||
-                      "Employee"}
+                    {employeeName || "Employee"}
                   </Text>
 
                   <Text
                     style={[
                       styles.profileCode,
                       {
-                        color:
-                          colors.muted,
+                        color: colors.muted,
                       },
                     ]}
                   >
-                    Employee ID •{" "}
-                    {employeeCode || "—"}
+                    Employee ID • {employeeCode || "—"}
                   </Text>
                 </View>
 
-                <View
-                  style={styles.youBadge}
-                >
-                  <Icon
-                    name="checkmark-circle"
-                    size={16}
-                    color="#16A34A"
-                  />
+                <View style={styles.youBadge}>
+                  <Icon name="checkmark-circle" size={16} color="#16A34A" />
 
-                  <Text
-                    style={styles.youText}
-                  >
-                    You
-                  </Text>
+                  <Text style={styles.youText}>You</Text>
                 </View>
               </View>
             )}
@@ -1092,17 +921,9 @@ const todayString = [
             />
 
             <View style={styles.dateRow}>
-              <DateField
-                label="From *"
-                value={fromDate}
-                target="from"
-              />
+              <DateField label="From *" value={fromDate} target="from" />
 
-              <DateField
-                label="To *"
-                value={toDate}
-                target="to"
-              />
+              <DateField label="To *" value={toDate} target="to" />
             </View>
 
             {dayCount > 0 && (
@@ -1110,32 +931,20 @@ const todayString = [
                 style={[
                   styles.duration,
                   {
-                    backgroundColor:
-                      colors.soft,
+                    backgroundColor: colors.soft,
                   },
                 ]}
               >
-                <Icon
-                  name="sparkles-outline"
-                  size={15}
-                  color={ACCENT}
-                />
+                <Icon name="sparkles-outline" size={15} color={ACCENT} />
 
-                <Text
-                  style={styles.durationText}
-                >
-                  {dayCount}{" "}
-                  {dayCount === 1
-                    ? "calendar day"
-                    : "calendar days"}{" "}
+                <Text style={styles.durationText}>
+                  {dayCount} {dayCount === 1 ? "calendar day" : "calendar days"}{" "}
                   selected
                 </Text>
               </View>
             )}
 
-            <Label>
-              Starting day leave type *
-            </Label>
+            <Label>Starting day leave type *</Label>
 
             <SingleDropdown
               data={leaveTypes}
@@ -1153,10 +962,8 @@ const todayString = [
               style={[
                 styles.dropdown,
                 {
-                  backgroundColor:
-                    colors.input,
-                  borderColor:
-                    colors.border,
+                  backgroundColor: colors.input,
+                  borderColor: colors.border,
                 },
               ]}
             />
@@ -1177,51 +984,41 @@ const todayString = [
               colors={colors}
             />
 
-            {!sameDay &&
-              fromDate &&
-              toDate && (
-                <>
-                  <Label>
-                    Ending day leave type *
-                  </Label>
+            {!sameDay && fromDate && toDate && (
+              <>
+                <Label>Ending day leave type *</Label>
 
-                  <SingleDropdown
-                    data={leaveTypes}
-                    value={toType}
-                    onChange={(item) => {
-                      setToType(item.value);
-                      setToLabel(item.label);
-                    }}
-                    placeholder="Choose leave type"
-                    style={[
-                      styles.dropdown,
-                      {
-                        backgroundColor:
-                          colors.input,
-                        borderColor:
-                          colors.border,
-                      },
-                    ]}
-                  />
+                <SingleDropdown
+                  data={leaveTypes}
+                  value={toType}
+                  onChange={(item) => {
+                    setToType(item.value);
+                    setToLabel(item.label);
+                  }}
+                  placeholder="Choose leave type"
+                  style={[
+                    styles.dropdown,
+                    {
+                      backgroundColor: colors.input,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
 
-                  {/* -------------------------------------------------------
+                {/* -------------------------------------------------------
                       LAST DAY TIME
                   ------------------------------------------------------- */}
 
-                  <TimeStrip
-                    label={toLabel}
-                    start={lastTimeFrom}
-                    end={lastTimeTo}
-                    onChangeStart={
-                      setLastTimeFrom
-                    }
-                    onChangeEnd={
-                      setLastTimeTo
-                    }
-                    colors={colors}
-                  />
-                </>
-              )}
+                <TimeStrip
+                  label={toLabel}
+                  start={lastTimeFrom}
+                  end={lastTimeTo}
+                  onChangeStart={setLastTimeFrom}
+                  onChangeEnd={setLastTimeTo}
+                  colors={colors}
+                />
+              </>
+            )}
           </View>
 
           {/* -------------------------------------------------------
@@ -1251,17 +1048,13 @@ const todayString = [
               value={description}
               onChangeText={setDescription}
               autoCapitalize="sentences"
-              placeholderTextColor={
-                colors.muted
-              }
+              placeholderTextColor={colors.muted}
               style={[
                 styles.reason,
                 {
                   color: colors.text,
-                  backgroundColor:
-                    colors.input,
-                  borderColor:
-                    colors.border,
+                  backgroundColor: colors.input,
+                  borderColor: colors.border,
                 },
               ]}
             />
@@ -1286,26 +1079,15 @@ const todayString = [
             activeOpacity={0.86}
             onPress={submit}
             disabled={loading}
-            style={[
-              styles.submit,
-              loading && styles.disabled,
-            ]}
+            style={[styles.submit, loading && styles.disabled]}
           >
-            <Text
-              style={styles.submitText}
-            >
-              {loading
-                ? "Submitting…"
-                : "Submit leave request"}
+            <Text style={styles.submitText}>
+              {loading ? "Submitting…" : "Submit leave request"}
             </Text>
 
             {!loading && (
               <View style={styles.arrow}>
-                <Icon
-                  name="arrow-forward"
-                  size={18}
-                  color={ACCENT}
-                />
+                <Icon name="arrow-forward" size={18} color={ACCENT} />
               </View>
             )}
           </TouchableOpacity>
@@ -1323,8 +1105,7 @@ const todayString = [
               size={13}
               color={colors.muted}
             />{" "}
-            Your manager will be notified after
-            submission
+            Your manager will be notified after submission
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1337,25 +1118,20 @@ const todayString = [
         visible={calendarVisible}
         transparent
         animationType="fade"
-        onRequestClose={() =>
-          setCalendarVisible(false)
-        }
+        onRequestClose={() => setCalendarVisible(false)}
       >
         <View style={styles.overlay}>
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
             activeOpacity={1}
-            onPress={() =>
-              setCalendarVisible(false)
-            }
+            onPress={() => setCalendarVisible(false)}
           />
 
           <View
             style={[
               styles.calendarModal,
               {
-                backgroundColor:
-                  colors.card,
+                backgroundColor: colors.card,
               },
             ]}
           >
@@ -1371,20 +1147,14 @@ const todayString = [
                     },
                   ]}
                 >
-                  Select{" "}
-                  {calendarTarget ===
-                  "from"
-                    ? "start"
-                    : "end"}{" "}
-                  date
+                  Select {calendarTarget === "from" ? "start" : "end"} date
                 </Text>
 
                 <Text
                   style={[
                     styles.modalSub,
                     {
-                      color:
-                        colors.muted,
+                      color: colors.muted,
                     },
                   ]}
                 >
@@ -1396,21 +1166,12 @@ const todayString = [
                 style={[
                   styles.close,
                   {
-                    backgroundColor:
-                      colors.input,
+                    backgroundColor: colors.input,
                   },
                 ]}
-                onPress={() =>
-                  setCalendarVisible(
-                    false
-                  )
-                }
+                onPress={() => setCalendarVisible(false)}
               >
-                <Icon
-                  name="close"
-                  size={21}
-                  color={colors.text}
-                />
+                <Icon name="close" size={21} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -1421,48 +1182,32 @@ const todayString = [
               //     ? fromDate
               //     : todayString
               // }
-               minDate={
-    calendarTarget === "to" && fromDate
-      ? (fromDate > todayString ? fromDate : todayString)
-      : todayString
-  }
+              minDate={
+                calendarTarget === "to" && fromDate
+                  ? fromDate > todayString
+                    ? fromDate
+                    : todayString
+                  : todayString
+              }
               onDayPress={(day) => {
-                if (
-                  calendarTarget ===
-                  "from"
-                ) {
-                  setFromDate(
-                    day.dateString
-                  );
+                if (calendarTarget === "from") {
+                  setFromDate(day.dateString);
 
-                  if (
-                    !toDate ||
-                    new Date(toDate) <
-                      new Date(
-                        day.dateString
-                      )
-                  ) {
-                    setToDate(
-                      day.dateString
-                    );
+                  if (!toDate || new Date(toDate) < new Date(day.dateString)) {
+                    setToDate(day.dateString);
                   }
                 } else {
-                  setToDate(
-                    day.dateString
-                  );
+                  setToDate(day.dateString);
                 }
 
-                setCalendarVisible(
-                  false
-                );
+                setCalendarVisible(false);
               }}
               markedDates={{
                 ...(fromDate
                   ? {
                       [fromDate]: {
                         selected: true,
-                        selectedColor:
-                          ACCENT,
+                        selectedColor: ACCENT,
                       },
                     }
                   : {}),
@@ -1471,28 +1216,20 @@ const todayString = [
                   ? {
                       [toDate]: {
                         selected: true,
-                        selectedColor:
-                          ACCENT,
+                        selectedColor: ACCENT,
                       },
                     }
                   : {}),
               }}
               theme={{
-                calendarBackground:
-                  colors.card,
-                dayTextColor:
-                  colors.text,
-                monthTextColor:
-                  colors.text,
+                calendarBackground: colors.card,
+                dayTextColor: colors.text,
+                monthTextColor: colors.text,
                 arrowColor: ACCENT,
-                textDisabledColor:
-                  colors.border,
-                textSectionTitleColor:
-                  colors.muted,
-                todayTextColor:
-                  ACCENT,
-                textMonthFontWeight:
-                  "700",
+                textDisabledColor: colors.border,
+                textSectionTitleColor: colors.muted,
+                todayTextColor: ACCENT,
+                textMonthFontWeight: "700",
               }}
             />
           </View>
@@ -1545,8 +1282,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor:
-      "rgba(255,255,255,.08)",
+    backgroundColor: "rgba(255,255,255,.08)",
     right: -38,
     top: -65,
   },
@@ -1556,8 +1292,7 @@ const styles = StyleSheet.create({
     width: 95,
     height: 95,
     borderRadius: 50,
-    backgroundColor:
-      "rgba(255,255,255,.06)",
+    backgroundColor: "rgba(255,255,255,.06)",
     left: -35,
     bottom: -50,
   },
@@ -1571,8 +1306,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor:
-      "rgba(255,255,255,.18)",
+    backgroundColor: "rgba(255,255,255,.18)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,
@@ -1603,10 +1337,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 22,
     paddingTop: 16,
-    borderTopWidth:
-      StyleSheet.hairlineWidth,
-    borderTopColor:
-      "rgba(255,255,255,.22)",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255,255,255,.22)",
   },
 
   step: {
@@ -1620,8 +1352,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor:
-      "rgba(255,255,255,.45)",
+    borderColor: "rgba(255,255,255,.45)",
     marginRight: 7,
     alignItems: "center",
     justifyContent: "center",
@@ -1950,8 +1681,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-    backgroundColor:
-      "rgba(3,7,18,.68)",
+    backgroundColor: "rgba(3,7,18,.68)",
     justifyContent: "flex-end",
   },
 
@@ -1959,8 +1689,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
-    paddingBottom:
-      Platform.OS === "ios" ? 36 : 24,
+    paddingBottom: Platform.OS === "ios" ? 36 : 24,
   },
 
   handle: {

@@ -485,15 +485,13 @@ const handleLiveTracking = () => {
 
   useEffect(() => {
     const checkDisclosure = async () => {
-      if (userData?.result?.live_tracking_enabled) {
-        const accepted = await hasAcceptedLocationDisclosure();
-        if (!accepted) {
-          setShowLocationDisclosure(true);
-        }
+      const accepted = await hasAcceptedLocationDisclosure();
+      if (!accepted) {
+        setShowLocationDisclosure(true);
       }
     };
     checkDisclosure();
-  }, [userData?.result?.live_tracking_enabled]);
+  }, []);
 
   const performStartTracking = async () => {
     try {
@@ -536,7 +534,9 @@ const handleLiveTracking = () => {
     setShowLocationDisclosure(false);
     await setLocationDisclosureAccepted(true);
     await requestGooglePlayCompliantPermissions();
-    await performStartTracking();
+    if (userData?.result?.live_tracking_enabled) {
+      await performStartTracking();
+    }
   };
 
   const handleDenyDisclosure = () => {
