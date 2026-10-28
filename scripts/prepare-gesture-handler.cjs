@@ -62,7 +62,7 @@ try {
   const gradleFile = path.join(root, 'android/build.gradle');
   if (fs.existsSync(gradleFile)) {
     let gradleSource = fs.readFileSync(gradleFile, 'utf8');
-    const javaBlock = "srcDirs += 'paper/src/main/java'";
+    const javaBlock = 'sourceSets.main {\n        java {';
     if (!gradleSource.includes(javaBlock)) {
       const gradleTarget = '    sourceSets.main {\n        kotlin {';
       const gradleReplacement = `    sourceSets.main {

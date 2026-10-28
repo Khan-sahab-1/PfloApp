@@ -59,28 +59,28 @@ export const requestGooglePlayCompliantPermissions = async () => {
     }
 
     // 3. Request Background Location if declared in manifest (Android 10+ / API 29+)
-    if (Platform.Version >= 29 && PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION) {
-      try {
-        const bgStatus = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
-        );
-        if (!bgStatus) {
-          const bgResult = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
-            {
-              title: 'Background Location Permission',
-              message:
-                'To track your duty location while your screen is locked or app is minimized, please choose "Allow all the time".',
-              buttonPositive: 'Allow All The Time',
-              buttonNegative: 'Only While Using App',
-            },
-          );
-          console.log('[LocationDisclosure] Background location result:', bgResult);
-        }
-      } catch (bgError) {
-        console.warn('[LocationDisclosure] Background permission check error:', bgError);
-      }
-    }
+    // if (Platform.Version >= 29 && PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION) {
+    //   try {
+    //     const bgStatus = await PermissionsAndroid.check(
+    //       PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+    //     );
+    //     if (!bgStatus) {
+    //       const bgResult = await PermissionsAndroid.request(
+    //         PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+    //         {
+    //           title: 'Background Location Permission',
+    //           message:
+    //             'To track your duty location while your screen is locked or app is minimized, please choose "Allow all the time".',
+    //           buttonPositive: 'Allow All The Time',
+    //           buttonNegative: 'Only While Using App',
+    //         },
+    //       );
+    //       console.log('[LocationDisclosure] Background location result:', bgResult);
+    //     }
+    //   } catch (bgError) {
+    //     console.warn('[LocationDisclosure] Background permission check error:', bgError);
+    //   }
+    // }
 
     return true;
   } catch (error) {

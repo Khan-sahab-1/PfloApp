@@ -665,7 +665,7 @@ const handleLiveTracking = () => {
           <ActionCard icon="sunny-outline" title="Request leave" subtitle="Make time for yourself" color="#7B653C" onPress={handleLeaveRequest} />
           <ActionCard icon="file-tray-full-outline" title="Leave records" subtitle="All your requests, together" color="#4B6654" onPress={handleLeaveData} />
           {canReviewLeaves && <ActionCard icon="notifications-outline" title="Notifications" subtitle="Review what needs you" color="#7C645D" badge={notificationCount} onPress={handleNotification} />}
-          {/* {canReviewLeaves && <ActionCard icon="navigate-outline" title="Live tracking" subtitle="See your team on the map" color="#476876" onPress={handleLiveTracking} />} */}
+          {canReviewLeaves && <ActionCard icon="navigate-outline" title="Live tracking" subtitle="See your team on the map" color="#476876" onPress={handleLiveTracking} />}
         </View>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Sign out" activeOpacity={0.7} onPress={handlesignout}
           style={[styles.signOutRow, {borderColor: isDark ? '#2E3C33' : '#E0E5DA'}]}>

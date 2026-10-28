@@ -8,3 +8,19 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# React Native Gesture Handler
+-dontwarn com.swmansion.gesturehandler.**
+-keep class com.swmansion.gesturehandler.** { *; }
+
+# React Native Reanimated
+-dontwarn com.swmansion.reanimated.**
+-keep class com.swmansion.reanimated.** { *; }
+
+# Vision Camera
+-dontwarn com.mrousavy.camera.**
+-keep class com.mrousavy.camera.** { *; }
+
+# Camera Kit
+-dontwarn com.rncamerakit.**
+-keep class com.rncamerakit.** { *; }

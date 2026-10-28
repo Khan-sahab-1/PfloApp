@@ -110,7 +110,7 @@ const LocationDisclosureModal = ({
                 </View>
               </View>
 
-              <View style={styles.featureItem}>
+              {/* <View style={styles.featureItem}>
                 <View style={[styles.featureIconWrap, { backgroundColor: '#FEF3C7' }]}>
                   <Icon name="notifications-outline" size={20} color="#D97706" />
                 </View>
@@ -122,7 +122,7 @@ const LocationDisclosureModal = ({
                     An ongoing notification remains visible in your status bar while live tracking is running so you are always in full control.
                   </Text>
                 </View>
-              </View>
+              </View> */}
             </View>
           </ScrollView>
 
